@@ -56,7 +56,7 @@ function getSiteName() {
  * Get site email
  */
 function getSiteEmail() {
-    return getSetting('site_email', 'info@example.com');
+    return getSetting('site_email', 'aliajmalawan@gmail.com');
 }
 
 /**

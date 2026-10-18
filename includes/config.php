@@ -36,7 +36,7 @@ mysqli_set_charset($conn, "utf8mb4");
 // Site Configuration
 define('SITE_NAME', 'Tameer-e-Nau Public School');
 define('SITE_URL', 'http://localhost/tameer-e-noe/');
-define('ADMIN_EMAIL', 'info@example.com'); // TODO: set the school's real address
+define('ADMIN_EMAIL', 'aliajmalawan@gmail.com');
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
