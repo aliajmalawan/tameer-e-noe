@@ -7,3 +7,6 @@ error_log
 
 # Local editor/assistant settings
 .claude/
+
+# ...but keep schema upgrade scripts
+!database/*.sql

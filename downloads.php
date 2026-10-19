@@ -18,7 +18,7 @@ $meta_description = content('seo_downloads_description');
         <div class="container">
             <div class="card" style="padding: 0; overflow: hidden;">
                 <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="downloads-table" style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white;">
                                 <th style="padding: 18px 15px; text-align: left; width: 120px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Date</th>
@@ -42,10 +42,10 @@ $meta_description = content('seo_downloads_description');
                                     elseif ($file_ext == 'zip') $icon = 'fa-file-zipper';
 
                                     echo '<tr class="download-row" style="border-bottom: 1px solid var(--border-color); background: var(--surface); transition: background var(--transition);">';
-                                    echo '<td style="padding: 15px; font-weight: 600; color: var(--text-dark);">' . date('d.m.Y', strtotime($download['date'])) . '</td>';
-                                    echo '<td style="padding: 15px; color: var(--text-dark);">' . htmlspecialchars($download['description']) . '</td>';
-                                    echo '<td style="padding: 15px;"><i class="fas ' . $icon . '" style="color: var(--primary-color); margin-right: 8px;"></i><span style="font-weight: 500;">' . strtoupper($file_ext) . ' File</span></td>';
-                                    echo '<td style="padding: 15px; text-align: center;">';
+                                    echo '<td data-label="Date" style="padding: 15px; font-weight: 600; color: var(--text-dark);">' . date('d.m.Y', strtotime($download['date'])) . '</td>';
+                                    echo '<td data-label="Description" style="padding: 15px; color: var(--text-dark);">' . htmlspecialchars($download['description']) . '</td>';
+                                    echo '<td data-label="File Type" style="padding: 15px;"><i class="fas ' . $icon . '" style="color: var(--primary-color); margin-right: 8px;"></i><span style="font-weight: 500;">' . strtoupper($file_ext) . ' File</span></td>';
+                                    echo '<td class="download-action" style="padding: 15px; text-align: center;">';
                                     echo '<a href="' . $download['file_path'] . '" download class="btn btn-primary" style="padding: 10px 22px; font-size: 14px;"><i class="fas fa-download"></i> Download</a>';
                                     echo '</td>';
                                     echo '</tr>';

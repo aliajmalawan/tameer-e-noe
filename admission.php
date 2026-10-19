@@ -362,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <p>Transparent and affordable fee structure</p>
         </div>
 
-        <div class="card" style="max-width: 700px; margin: 0 auto; padding: 40px;">
+        <div class="card fee-card">
             <div style="text-align: center; margin-bottom: 30px;">
                 <i class="fas fa-money-bill-wave" style="font-size: 60px; color: var(--accent-color);"></i>
             </div>
@@ -383,7 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <i class="fas <?php echo $row['icon']; ?>" style="color: var(--primary-color); width: 20px; text-align: center;"></i>
                         <?php echo htmlspecialchars($row['label']); ?>
                     </span>
-                    <span style="font-weight: 700; color: var(--primary-color);"><?php echo htmlspecialchars($row['amount']); ?></span>
+                    <span class="fee-amount"><?php echo htmlspecialchars($row['amount']); ?></span>
                 </li>
                 <?php endforeach; ?>
             </ul>

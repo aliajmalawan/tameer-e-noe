@@ -16,7 +16,7 @@ $meta_description = content('seo_gallery_description');
         $has_categories = $gallery_categories && mysqli_num_rows($gallery_categories) > 0;
         ?>
         <?php if ($has_categories): ?>
-        <div class="text-center mb-30">
+        <div class="text-center mb-30 gallery-filters">
             <button class="btn btn-primary" style="margin: 5px;" onclick="filterGallery('all')">All</button>
             <?php while ($cat = mysqli_fetch_assoc($gallery_categories)): ?>
                 <button class="btn btn-outline-dark" style="margin: 5px;" onclick="filterGallery('<?php echo htmlspecialchars($cat['slug']); ?>')"><?php echo htmlspecialchars($cat['name']); ?></button>
@@ -32,10 +32,10 @@ $meta_description = content('seo_gallery_description');
             if ($gallery_result && mysqli_num_rows($gallery_result) > 0) {
                 while ($image = mysqli_fetch_assoc($gallery_result)) {
                     echo '<div class="gallery-item" data-category="' . htmlspecialchars($image['category']) . '" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">';
-                    echo '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars(!empty($image['title']) ? $image['title'] : 'Campus life at ' . getSiteName()) . '" loading="lazy" style="width: 100%; height: 250px; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">';
+                    echo '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars(!empty($image['title']) ? $image['title'] : 'Campus life at ' . getSiteName()) . '" loading="lazy" class="gallery-img" style="width: 100%; height: 250px; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">';
                     if (!empty($image['title'])) {
                         echo '<div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding: 15px 10px 10px; color: white;">';
-                        echo '<p style="text-align: center; margin: 0; font-weight: 600; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">' . htmlspecialchars($image['title']) . '</p>';
+                        echo '<p class="gallery-caption" style="text-align: center; margin: 0; font-weight: 600; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">' . htmlspecialchars($image['title']) . '</p>';
                         echo '</div>';
                     }
                     echo '</div>';

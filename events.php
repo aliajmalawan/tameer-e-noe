@@ -77,9 +77,9 @@ $meta_description = content('seo_events_description');
                         echo '<img src="' . htmlspecialchars($news['image']) . '" alt="' . htmlspecialchars($news['title']) . '" style="width: 100%; height: 300px; object-fit: cover;">';
                     }
 
-                    echo '<div style="padding: 30px;">';
-                    echo '<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">';
-                    echo '<h3 style="flex: 1; margin: 0; color: var(--primary-color);">' . htmlspecialchars($news['title']) . '</h3>';
+                    echo '<div class="news-body" style="padding: 30px;">';
+                    echo '<div class="news-head" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">';
+                    echo '<h3 style="flex: 1 1 260px; margin: 0; color: var(--primary-color);">' . htmlspecialchars($news['title']) . '</h3>';
                     echo '<div style="display: flex; align-items: center; gap: 15px;">';
 
                     // Date badge
