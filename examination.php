@@ -22,7 +22,7 @@ $meta_description = content('seo_examination_description');
         <div class="container">
             <div class="section-header reveal">
                 <span class="eyebrow">Schedule</span>
-                <h2><i class="fas fa-calendar-alt"></i> Exam Datesheets</h2>
+                <h2>Exam Datesheets</h2>
             </div>
 
             <?php
@@ -82,7 +82,7 @@ $meta_description = content('seo_examination_description');
                     echo '</div>';
                 }
             } else {
-                echo '<div class="card"><p style="text-align: center; color: var(--text-light); padding: 40px;">No datesheets available at the moment</p></div>';
+                renderEmptyState('fa-calendar-alt', 'No datesheets yet', 'Exam schedules will appear here as soon as they are announced.');
             }
             ?>
         </div>
@@ -93,7 +93,7 @@ $meta_description = content('seo_examination_description');
         <div class="container">
             <div class="section-header reveal">
                 <span class="eyebrow">Results</span>
-                <h2><i class="fas fa-trophy"></i> Board Results</h2>
+                <h2>Board Results</h2>
             </div>
 
             <!-- Intermediate Results -->
@@ -110,7 +110,7 @@ $meta_description = content('seo_examination_description');
                             echo '</div>';
                         }
                     } else {
-                        echo '<p style="color: var(--text-light);">No Intermediate results available yet</p>';
+                        echo '<div style="grid-column: 1 / -1;">'; renderEmptyState('fa-trophy', 'No Intermediate results yet', 'Results will be posted here once the board announces them.'); echo '</div>';
                     }
                     ?>
                 </div>
@@ -130,7 +130,7 @@ $meta_description = content('seo_examination_description');
                             echo '</div>';
                         }
                     } else {
-                        echo '<p style="color: var(--text-light);">No Matric results available yet</p>';
+                        echo '<div style="grid-column: 1 / -1;">'; renderEmptyState('fa-trophy', 'No Matric results yet', 'Results will be posted here once the board announces them.'); echo '</div>';
                     }
                     ?>
                 </div>

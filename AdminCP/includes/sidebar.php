@@ -20,6 +20,7 @@ $admin_nav_links = [
     ['manage_events.php', 'fa-calendar-alt', 'Events'],
     ['manage_news.php', 'fa-newspaper', 'News'],
     ['manage_gallery.php', 'fa-images', 'Gallery'],
+    ['manage_videos.php', 'fa-video', 'Gallery Videos'],
     ['manage_downloads.php', 'fa-download', 'Downloads'],
     ['manage_alumni.php', 'fa-user-graduate', 'Alumni'],
     ['manage_alumni_reviews.php', 'fa-star', 'Alumni Reviews'],

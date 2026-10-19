@@ -169,6 +169,10 @@ function getFooterContent() {
  */
 function getLeadershipMessages() {
     global $conn;
+    static $leaders = null;   // pages ask twice (check + render); one query is enough
+    if ($leaders !== null) {
+        return $leaders;
+    }
 
     $query = "SELECT DISTINCT * FROM leadership WHERE status = 'active' ORDER BY display_order ASC";
     $result = mysqli_query($conn, $query);
@@ -325,7 +329,9 @@ function content($key) {
 
 function renderPageHero($image, $eyebrow, $title, $subtitle = '', $crumb = '', $compact = false, $icon = '') {
     echo '<section class="page-hero' . ($compact ? ' is-compact' : '') . '">';
-    echo '<div class="page-hero-bg" style="background-image: url(\'' . htmlspecialchars($image) . '\');"></div>';
+    // JPEG for every browser, then a WebP version (about a third smaller) for those that support it
+    $webp_bg = webpBackground($image);
+    echo '<div class="page-hero-bg" style="background-image: url(\'' . htmlspecialchars($image) . '\');' . ($webp_bg !== '' ? ' background-image: ' . $webp_bg . ';' : '') . '"></div>';
     echo '<div class="container"><div class="page-hero-content">';
     if ($crumb !== '') {
         echo '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.php"><i class="fas fa-house" aria-hidden="true"></i> Home</a>'
@@ -408,4 +414,29 @@ function nextRowId($table) {
     $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM `$table`"));
     return max(1, (int) ($row['next_id'] ?? 1));
 }
-?>
+
+/** Friendly placeholder for a list that has nothing in it yet (icon, short title, one line of help). */
+function renderEmptyState($icon, $title, $text = '') {
+    echo '<div class="empty-state">';
+    echo '<span class="empty-state-icon"><i class="fas ' . htmlspecialchars($icon) . '" aria-hidden="true"></i></span>';
+    echo '<h3>' . htmlspecialchars($title) . '</h3>';
+    if ($text !== '') {
+        echo '<p>' . htmlspecialchars($text) . '</p>';
+    }
+    echo '</div>';
+}
+
+/**
+ * The 11-character video ID from any usual YouTube link (watch?v=, youtu.be/, shorts/, embed/, live/),
+ * or '' when the text isn't a YouTube link. A bare ID is accepted too.
+ */
+function youtubeId($url) {
+    $url = trim((string) $url);
+    if (preg_match('/^[A-Za-z0-9_-]{11}$/', $url)) {
+        return $url;
+    }
+    if (preg_match('~(?:youtube(?:-nocookie)?\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/|v/)|youtu\.be/)([A-Za-z0-9_-]{11})~i', $url, $m)) {
+        return $m[1];
+    }
+    return '';
+}

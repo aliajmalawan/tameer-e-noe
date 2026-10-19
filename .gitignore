@@ -10,3 +10,6 @@ error_log
 
 # ...but keep schema upgrade scripts
 !database/*.sql
+
+# Gallery thumbnails are generated automatically on the server
+uploads/**/thumbs/

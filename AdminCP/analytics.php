@@ -41,11 +41,17 @@ while ($row = mysqli_fetch_assoc($hourly_traffic)) {
 
 // Get daily traffic for last 30 days
 $daily_traffic = getDailyTraffic($conn, 30);
+$visits_by_day = [];
+while ($row = mysqli_fetch_assoc($daily_traffic)) {
+    $visits_by_day[$row['visit_date']] = (int) $row['visits'];
+}
+// One point per day, so quiet days show as 0 instead of being skipped
 $daily_labels = [];
 $daily_data = [];
-while ($row = mysqli_fetch_assoc($daily_traffic)) {
-    $daily_labels[] = date('M d', strtotime($row['visit_date']));
-    $daily_data[] = $row['visits'];
+for ($i = 29; $i >= 0; $i--) {
+    $day = date('Y-m-d', strtotime("-$i days"));
+    $daily_labels[] = date('M d', strtotime($day));
+    $daily_data[] = $visits_by_day[$day] ?? 0;
 }
 
 // Helper function to convert page URL to friendly name
@@ -86,6 +92,9 @@ function getPageName($url) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
     <title>Website Analytics - <?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="../css/style.css?v=<?php echo assetVersion('css/style.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

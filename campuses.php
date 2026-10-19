@@ -11,8 +11,6 @@ function renderCampusDetails($c) {
 
     if (!empty($c['description'])) {
         echo '<p style="line-height: 1.8;">' . nl2br(htmlspecialchars($c['description'])) . '</p>';
-    } else {
-        echo '<p style="line-height: 1.8; color: var(--text-light); font-style: italic;">More details about this campus are coming soon.</p>';
     }
 
     $has_contact_info = !empty($c['address']) || !empty($c['phone']) || !empty($c['email']);

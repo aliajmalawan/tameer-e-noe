@@ -8,12 +8,16 @@ require_once __DIR__ . '/image_helper.php';
 // Get active theme
 function getActiveTheme() {
     global $conn;
+    static $theme = null;     // colours, logo and favicon all ask for it; read it once per page
+    if ($theme !== null) {
+        return $theme;
+    }
 
     $query = "SELECT * FROM themes WHERE is_active = 1 LIMIT 1";
     $result = mysqli_query($conn, $query);
 
     if ($result && mysqli_num_rows($result) > 0) {
-        return mysqli_fetch_assoc($result);
+        return $theme = mysqli_fetch_assoc($result);
     }
 
     // Default theme if none active

@@ -44,164 +44,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($doc_error !== '') {
         $error_message = $doc_error;
     } elseif (mysqli_query($conn, $insert_query)) {
-        // Send email notification to admin
-        $admin_email = ADMIN_EMAIL;
-        $subject_admin = "New Admission Application - Tameer-e-Nau Public School";
+        // Branded emails: the original form values (not the SQL-escaped copies) are shown
+        require_once __DIR__ . '/includes/email_helper.php';
+        $f = function ($key) { return trim($_POST[$key] ?? ''); };
 
-        $message_admin = "
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .header { background: #78864F; color: white; padding: 20px; text-align: center; }
-                .content { padding: 20px; background: #f9f9f9; }
-                .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                .info-table td { padding: 10px; border-bottom: 1px solid #ddd; }
-                .info-table td:first-child { font-weight: bold; width: 200px; background: #f0f0f0; }
-                .footer { background: #333; color: white; padding: 15px; text-align: center; font-size: 12px; }
-            </style>
-        </head>
-        <body>
-            <div class='header'>
-                <h2>New Admission Application Received</h2>
-            </div>
-            <div class='content'>
-                <p>A new admission application has been submitted on your website. Details below:</p>
+        // Notification to the school
+        $message_admin = brandEmail('New admission application', '<p style="margin:0 0 6px;">A new admission application has been submitted on the website.</p>'
+            . emailInfoTable([
+                'Student name' => $f('student_name'),
+                'Father / guardian' => $f('father_name'),
+                'CNIC / B-Form' => $f('cnic_bform'),
+                'Phone' => $f('phone'),
+                'Email' => $f('email'),
+                'Address' => $f('address'),
+                'Program / class' => $course_name,
+                'Previous education' => $f('previous_education'),
+                'Additional information' => $f('message'),
+                'Document attached' => $document_path !== '' ? 'Yes (open it in the admin panel)' : 'No',
+                'Received' => date('d M Y, h:i A'),
+            ])
+            . emailNote('<strong>Action required:</strong> review this application under Admissions in the admin panel and contact the family.', 'action'));
+        mail(ADMIN_EMAIL, 'New Admission Application - ' . getSiteName(), $message_admin, emailHeaders($f('email')));
 
-                <table class='info-table'>
-                    <tr>
-                        <td>Student Name:</td>
-                        <td>" . htmlspecialchars($student_name) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Father/Guardian Name:</td>
-                        <td>" . htmlspecialchars($father_name) . "</td>
-                    </tr>
-                    <tr>
-                        <td>CNIC/B-Form:</td>
-                        <td>" . htmlspecialchars($cnic_bform) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Phone Number:</td>
-                        <td>" . htmlspecialchars($phone) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Email Address:</td>
-                        <td>" . htmlspecialchars($email) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Address:</td>
-                        <td>" . htmlspecialchars($address) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Program/Course:</td>
-                        <td>" . htmlspecialchars($course_name) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Previous Education:</td>
-                        <td>" . htmlspecialchars($previous_education) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Additional Information:</td>
-                        <td>" . htmlspecialchars($message) . "</td>
-                    </tr>
-                    <tr>
-                        <td>Application Date:</td>
-                        <td>" . date('d M Y, h:i A') . "</td>
-                    </tr>
-                </table>
-
-                <p style='background: #fff3cd; padding: 15px; border-left: 4px solid #B3262D;'>
-                    <strong>Action Required:</strong> Please review this application in your admin panel and contact the student for further process.
-                </p>
-            </div>
-            <div class='footer'>
-                <p>Tameer-e-Nau Public School - Canal View, Hasilpur</p>
-                <p>This is an automated email from your website admission form.</p>
-            </div>
-        </body>
-        </html>
-        ";
-
-        $headers_admin = "MIME-Version: 1.0" . "\r\n";
-        $headers_admin .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        $headers_admin .= "From: Tameer-e-Nau Public School <noreply@" . preg_replace('/^www\./', '', $_SERVER['HTTP_HOST'] ?? 'localhost') . ">" . "\r\n";
-        $headers_admin .= "Reply-To: " . $email . "\r\n";
-
-        mail($admin_email, $subject_admin, $message_admin, $headers_admin);
-
-        // Send confirmation email to student (if email provided)
-        if (!empty($email)) {
-            $subject_student = "Application Received - Tameer-e-Nau Public School";
-
-            $message_student = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .header { background: #78864F; color: white; padding: 30px; text-align: center; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .highlight { background: #fff3cd; padding: 20px; border-left: 4px solid #B3262D; margin: 20px 0; }
-                    .footer { background: #333; color: white; padding: 20px; text-align: center; font-size: 12px; }
-                    .contact-info { background: white; padding: 15px; margin: 20px 0; border-radius: 5px; }
-                </style>
-            </head>
-            <body>
-                <div class='header'>
-                    <h1>🎓 Tameer-e-Nau Public School</h1>
-                    <p style='font-size: 18px; margin: 10px 0 0 0;'>Canal View, Hasilpur</p>
-                </div>
-                <div class='content'>
-                    <h2 style='color: #78864F;'>Dear " . htmlspecialchars($student_name) . ",</h2>
-
-                    <p style='font-size: 16px;'>Thank you for applying to <strong>Tameer-e-Nau Public School</strong>!</p>
-
-                    <div class='highlight'>
-                        <p style='margin: 0; font-size: 16px;'><strong>✓ Your application has been received successfully!</strong></p>
-                    </div>
-
-                    <p>We have received your admission application for <strong>" . htmlspecialchars($course_name) . "</strong>.</p>
-
-                    <h3 style='color: #78864F;'>Next Steps:</h3>
-                    <ol style='font-size: 15px; line-height: 1.8;'>
-                        <li>Our admission team will review your application</li>
-                        <li>We will verify your documents and information</li>
-                        <li>You will receive a call/email within 2-3 working days</li>
-                        <li>Please keep your phone accessible for our call</li>
-                    </ol>
-
-                    <div class='contact-info'>
-                        <h3 style='color: #78864F; margin-top: 0;'>Contact Information:</h3>
-                        <p style='margin: 5px 0;'><strong>📞 Phone:</strong> " . getSitePhone() . "</p>
-                        <p style='margin: 5px 0;'><strong>📧 Email:</strong> " . getSiteEmail() . "</p>
-                        <p style='margin: 5px 0;'><strong>🌐 Website:</strong> " . ($_SERVER['HTTP_HOST'] ?? '') . "</p>
-                        <p style='margin: 5px 0;'><strong>📍 Address:</strong> Canal View, Hasilpur</p>
-                    </div>
-
-                    <p style='font-size: 14px; color: #666; margin-top: 30px;'>
-                        If you have any questions, feel free to contact us at the above details.
-                    </p>
-
-                    <p style='font-size: 16px; margin-top: 30px;'>
-                        <strong>Best Regards,</strong><br>
-                        Admission Team<br>
-                        Tameer-e-Nau Public School
-                    </p>
-                </div>
-                <div class='footer'>
-                    <p>Tameer-e-Nau Public School - Quality Education for a Bright Future</p>
-                    <p style='margin: 10px 0 0 0;'>This is an automated confirmation email. Please do not reply to this email.</p>
-                </div>
-            </body>
-            </html>
-            ";
-
-            $headers_student = "MIME-Version: 1.0" . "\r\n";
-            $headers_student .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-            $headers_student .= "From: Tameer-e-Nau Public School <noreply@" . preg_replace('/^www\./', '', $_SERVER['HTTP_HOST'] ?? 'localhost') . ">" . "\r\n";
-            $headers_student .= "Reply-To: " . getSiteEmail() . "" . "\r\n";
-
-            mail($email, $subject_student, $message_student, $headers_student);
+        // Confirmation to the applicant (email is optional on the form)
+        if ($f('email') !== '') {
+            $message_student = brandEmail('Application received', '<p style="margin:0 0 12px;">Dear ' . htmlspecialchars($f('student_name')) . ',</p>'
+                . '<p style="margin:0 0 12px;">Thank you for applying to <strong>' . htmlspecialchars(getSiteName()) . '</strong>.</p>'
+                . emailNote('<strong>&#10003; Your application for ' . htmlspecialchars($course_name) . ' has been received.</strong>')
+                . '<p style="margin:16px 0 6px;font-weight:700;color:' . EMAIL_OLIVE . ';">What happens next</p>'
+                . '<ol style="margin:0 0 14px;padding-left:20px;">'
+                . '<li>Our admission team reviews your application.</li>'
+                . '<li>We verify your documents and details.</li>'
+                . '<li>We call or email you within 2&ndash;3 working days &mdash; please keep your phone nearby.</li>'
+                . '</ol>'
+                . '<p style="margin:0 0 12px;">Questions? Call us on <strong>' . htmlspecialchars(getSitePhone()) . '</strong> (' . htmlspecialchars(getOfficeHours()) . ').</p>'
+                . '<p style="margin:22px 0 0;">Best regards,<br>Admission Office<br><strong>' . htmlspecialchars(getSiteName()) . '</strong></p>'
+                . '<p style="margin:18px 0 0;font-size:12.5px;color:' . EMAIL_MUTED . ';">This is an automatic confirmation; replies go to the school office.</p>');
+            mail($f('email'), 'Application Received - ' . getSiteName(), $message_student, emailHeaders(hasSiteEmail() ? getSiteEmail() : ''));
         }
 
         $success_message = "Your admission application has been submitted successfully! A confirmation email has been sent to your email address. We will contact you soon.";

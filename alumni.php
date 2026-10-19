@@ -74,7 +74,7 @@ $meta_description = content('seo_alumni_description');
 
     <?php if ($message): ?>
         <div class="container" style="margin-top: 30px;">
-            <div style="background: #d4edda; color: #155724; padding: 16px 20px; border-radius: var(--radius-sm); text-align: center; font-weight: 600;">
+            <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <?php echo $message; ?>
             </div>
         </div>
@@ -82,7 +82,7 @@ $meta_description = content('seo_alumni_description');
 
     <?php if ($error): ?>
         <div class="container" style="margin-top: 30px;">
-            <div style="background: #f8d7da; color: #721c24; padding: 16px 20px; border-radius: var(--radius-sm); text-align: center; font-weight: 600;">
+            <div class="alert alert-error">
                 <i class="fas fa-exclamation-triangle"></i> <?php echo $error; ?>
             </div>
         </div>

@@ -99,10 +99,24 @@ function getOperatingSystem($user_agent) {
     return 'Unknown OS';
 }
 
+// True for search-engine crawlers, link previewers, uptime checkers and scripts,
+// so the reports only count people
+function isBotUserAgent($user_agent) {
+    if (trim($user_agent) === '') {
+        return true;
+    }
+    return (bool) preg_match('/bot|crawl|spider|slurp|facebookexternalhit|whatsapp|telegram|preview|monitor|uptime|headless|lighthouse|curl|wget|python|java\/|go-http|okhttp|axios|node-fetch|postman|scrapy|httpclient|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baiduspider|bingpreview/i', $user_agent);
+}
+
 // Track page view
 function trackPageView($conn) {
     // Don't track admin pages
     if (strpos($_SERVER['PHP_SELF'], 'AdminCP') !== false) {
+        return;
+    }
+
+    // Skip bots, and the school's own staff browsing the site while logged in to the admin panel
+    if (isBotUserAgent($_SERVER['HTTP_USER_AGENT'] ?? '') || !empty($_SESSION['admin_logged_in'])) {
         return;
     }
 
@@ -127,7 +141,12 @@ function trackPageView($conn) {
         $user_agent_esc = mysqli_real_escape_string($conn, $user_agent);
         $session_id_esc = mysqli_real_escape_string($conn, $session_id);
         $page_url = mysqli_real_escape_string($conn, $_SERVER['PHP_SELF']);
-        $page_title = mysqli_real_escape_string($conn, isset($page_title_meta) ? $page_title_meta : '');
+        // Each page sets $page_title before including the header; fall back to the file name
+        $title_raw = $GLOBALS['page_title'] ?? '';
+        if (trim((string) $title_raw) === '') {
+            $title_raw = ucwords(str_replace(['-', '_'], ' ', pathinfo($_SERVER['PHP_SELF'], PATHINFO_FILENAME)));
+        }
+        $page_title = mysqli_real_escape_string($conn, mb_substr((string) $title_raw, 0, 250));
         $referrer = mysqli_real_escape_string($conn, isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'Direct');
         $device_type = getDeviceType($user_agent);
         $browser = getBrowser($user_agent);
@@ -165,8 +184,11 @@ function trackPageView($conn) {
                     current_page = VALUES(current_page),
                     last_activity = NOW()");
 
-        // Clean up old active users (inactive for more than 5 minutes)
-        mysqli_query($conn, "DELETE FROM active_users WHERE last_activity < DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
+        // Clean up old active users (inactive for more than 5 minutes). Done on roughly one page
+        // view in 20 rather than every view; the "online now" count already only reads recent rows.
+        if (mt_rand(1, 20) === 1) {
+            mysqli_query($conn, "DELETE FROM active_users WHERE last_activity < DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
+        }
     } catch (\Throwable $e) {
         error_log('Analytics tracking failed: ' . $e->getMessage());
     }
@@ -199,7 +221,9 @@ function getUniqueVisitors($conn, $date_range = 'all') {
         $where = "WHERE last_visit >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
     }
 
-    $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM unique_visitors $where");
+    // Distinct browsing sessions in the recorded page views for the same period
+    $where = str_replace('last_visit', 'visit_date', str_replace('DATE(last_visit)', 'visit_date', $where));
+    $result = mysqli_query($conn, "SELECT COUNT(DISTINCT session_id) as total FROM website_analytics $where");
     $row = mysqli_fetch_assoc($result);
     return $row['total'];
 }
@@ -226,10 +250,12 @@ function getPopularPages($conn, $limit = 10, $date_range = 'all') {
         $where = "WHERE visit_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
     }
 
-    $sql = "SELECT page_url, COUNT(*) as views
+    // Group on the file name so the same page reached under different folders
+    // (e.g. /index.php and /school/index.php) counts as one page
+    $sql = "SELECT CONCAT('/', SUBSTRING_INDEX(page_url, '/', -1)) AS page_url, COUNT(*) as views
             FROM website_analytics
             $where
-            GROUP BY page_url
+            GROUP BY SUBSTRING_INDEX(page_url, '/', -1)
             ORDER BY views DESC
             LIMIT $limit";
 
@@ -310,6 +336,11 @@ function getTrafficSources($conn, $limit = 10, $date_range = 'all') {
         $where = "WHERE visit_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
     }
 
+    // Clicks from one page of this site to another are navigation, not a traffic source
+    $own_host = mysqli_real_escape_string($conn, preg_replace('/^www\./', '', $_SERVER['HTTP_HOST'] ?? 'localhost'));
+    $internal = "referrer LIKE '%://$own_host/%' OR referrer LIKE '%://www.$own_host/%'";
+    $where = $where === '' ? "WHERE NOT ($internal)" : "$where AND NOT ($internal)";
+
     $sql = "SELECT
             CASE
                 WHEN referrer = 'Direct' THEN 'Direct Traffic'
@@ -347,10 +378,10 @@ function getBounceRate($conn, $date_range = 'all') {
             SUM(CASE WHEN page_count = 1 THEN 1 ELSE 0 END) as bounced,
             COUNT(*) as total
             FROM (
-                SELECT visitor_ip, COUNT(DISTINCT page_url) as page_count
+                SELECT session_id, COUNT(DISTINCT page_url) as page_count
                 FROM website_analytics
                 $where_date
-                GROUP BY visitor_ip
+                GROUP BY session_id
             ) as visitor_stats";
 
     $result = mysqli_query($conn, $sql);

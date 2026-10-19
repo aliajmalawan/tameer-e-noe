@@ -63,8 +63,11 @@ $meta_description = content('seo_about_description');
     </div>
 </section>
 
-<!-- Leadership Message (shown only once a real principal's message is saved in Settings) -->
-<?php if (trim(getSetting('principal_message_quote')) !== ''): ?>
+<!-- Leadership: the same messages as the homepage (AdminCP > Leadership); the older single
+     principal's message from Settings is only used when no leadership entries exist -->
+<?php if (!empty(getLeadershipMessages())): ?>
+<?php include 'includes/leadership_section.php'; ?>
+<?php elseif (trim(getSetting('principal_message_quote')) !== ''): ?>
 <section class="bg-light">
     <div class="container">
         <div class="section-header reveal">

@@ -1,6 +1,8 @@
 <?php
 // Database Configuration
-define('DB_HOST', 'localhost');
+// On Windows (XAMPP) "localhost" first tries IPv6 and can add ~2 seconds to every page;
+// 127.0.0.1 connects straight away. Linux hosting (cPanel) keeps "localhost", its fast local socket.
+define('DB_HOST', PHP_OS_FAMILY === 'Windows' ? '127.0.0.1' : 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'tameer_e_noe');

@@ -437,7 +437,7 @@ $campus_life = [
         <div class="life-photo-grid">
             <?php foreach ($life_cards as $card): ?>
             <a href="gallery.php" class="life-photo reveal">
-                <img src="<?php echo htmlspecialchars($card['cover']); ?>" alt="<?php echo htmlspecialchars($card['name']); ?> at <?php echo htmlspecialchars(getSiteName()); ?>" loading="lazy">
+                <?php $cover = mediaThumb($card['cover']); ?><img src="<?php echo htmlspecialchars($cover['src']); ?>"<?php if ($cover['width']): ?> width="<?php echo $cover['width']; ?>" height="<?php echo $cover['height']; ?>"<?php endif; ?> decoding="async" alt="<?php echo htmlspecialchars($card['name']); ?> at <?php echo htmlspecialchars(getSiteName()); ?>" loading="lazy">
                 <span class="life-photo-caption">
                     <strong><?php echo htmlspecialchars($card['name']); ?></strong>
                     <small><?php echo intval($card['count']); ?> photos</small>

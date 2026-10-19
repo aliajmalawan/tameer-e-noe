@@ -2,82 +2,98 @@
 require_once 'includes/config.php';
 $page_title = content('seo_gallery_title');
 $meta_description = content('seo_gallery_description');
+
+$gallery_categories = mysqli_query($conn, "SELECT DISTINCT * FROM gallery_categories WHERE status = 'active' ORDER BY display_order ASC, name ASC");
+$categories = [];
+while ($gallery_categories && ($cat = mysqli_fetch_assoc($gallery_categories))) {
+    $categories[$cat['slug']] = $cat['name'];
+}
+
+$gallery_result = mysqli_query($conn, "SELECT DISTINCT * FROM gallery WHERE status = 'active' ORDER BY created_at DESC, id DESC");
+$photos = [];
+while ($gallery_result && ($row = mysqli_fetch_assoc($gallery_result))) {
+    $photos[] = $row;
+}
+
+// Videos are optional: the table only exists once database/upgrade-gallery-videos.sql has been run
+$videos = [];
+$videos_result = @mysqli_query($conn, "SELECT * FROM gallery_videos WHERE status = 'active' ORDER BY display_order ASC, id DESC");
+while ($videos_result && ($row = mysqli_fetch_assoc($videos_result))) {
+    $videos[] = $row;
+}
+
+// Count photos per category so empty categories don't get a filter button
+$photo_counts = array_count_values(array_column($photos, 'category'));
 ?>
 <?php include 'includes/header.php'; ?>
 
 <!-- Page Header -->
 <?php renderPageBanner('gallery'); ?>
 
-<!-- Gallery Categories -->
-<section class="bg-light">
+<!-- Photos -->
+<section class="bg-light" id="photos">
     <div class="container">
-        <?php
-        $gallery_categories = mysqli_query($conn, "SELECT DISTINCT * FROM gallery_categories WHERE status = 'active' ORDER BY display_order ASC, name ASC");
-        $has_categories = $gallery_categories && mysqli_num_rows($gallery_categories) > 0;
-        ?>
-        <?php if ($has_categories): ?>
-        <div class="text-center mb-30 gallery-filters">
-            <button class="btn btn-primary" style="margin: 5px;" onclick="filterGallery('all')">All</button>
-            <?php while ($cat = mysqli_fetch_assoc($gallery_categories)): ?>
-                <button class="btn btn-outline-dark" style="margin: 5px;" onclick="filterGallery('<?php echo htmlspecialchars($cat['slug']); ?>')"><?php echo htmlspecialchars($cat['name']); ?></button>
-            <?php endwhile; ?>
+        <?php if (!empty($photos) && count(array_intersect_key($categories, $photo_counts)) > 1): ?>
+        <div class="gallery-filters" role="toolbar" aria-label="Filter photos by category">
+            <button type="button" class="gallery-filter is-active" data-filter="all" aria-pressed="true">All <span><?php echo count($photos); ?></span></button>
+            <?php foreach ($categories as $slug => $name): if (empty($photo_counts[$slug])) continue; ?>
+                <button type="button" class="gallery-filter" data-filter="<?php echo htmlspecialchars($slug); ?>" aria-pressed="false"><?php echo htmlspecialchars($name); ?> <span><?php echo intval($photo_counts[$slug]); ?></span></button>
+            <?php endforeach; ?>
         </div>
         <?php endif; ?>
 
-        <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 20px;">
-            <?php
-            $gallery_query = "SELECT DISTINCT * FROM gallery WHERE status = 'active' ORDER BY created_at DESC";
-            $gallery_result = mysqli_query($conn, $gallery_query);
-
-            if ($gallery_result && mysqli_num_rows($gallery_result) > 0) {
-                while ($image = mysqli_fetch_assoc($gallery_result)) {
-                    echo '<div class="gallery-item" data-category="' . htmlspecialchars($image['category']) . '" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">';
-                    echo '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars(!empty($image['title']) ? $image['title'] : 'Campus life at ' . getSiteName()) . '" loading="lazy" class="gallery-img" style="width: 100%; height: 250px; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'">';
-                    if (!empty($image['title'])) {
-                        echo '<div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding: 15px 10px 10px; color: white;">';
-                        echo '<p class="gallery-caption" style="text-align: center; margin: 0; font-weight: 600; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">' . htmlspecialchars($image['title']) . '</p>';
-                        echo '</div>';
-                    }
-                    echo '</div>';
-                }
-            } else {
-                // No gallery items message
-                echo '<div style="grid-column: 1 / -1; text-align: center; padding: 80px 20px;">';
-                echo '<i class="fas fa-images" style="font-size: 100px; color: var(--text-light); margin-bottom: 30px; opacity: 0.3;"></i>';
-                echo '<h3 style="color: var(--text-dark); margin-bottom: 15px; font-size: 28px;">Gallery Coming Soon</h3>';
-                echo '<p style="color: var(--text-light); font-size: 18px; max-width: 500px; margin: 0 auto;">We are working on adding amazing photos of our events, classes, and achievements. Check back soon!</p>';
-                echo '</div>';
-            }
+        <?php if (!empty($photos)): ?>
+        <div id="galleryGrid" class="gallery-grid">
+            <?php foreach ($photos as $i => $photo):
+                $thumb = mediaThumb($photo['image_path']);
+                $category_name = $categories[$photo['category']] ?? '';
+                $caption = trim((string) $photo['title']);
+                $alt = $caption !== '' ? $caption : ($category_name !== '' ? $category_name : 'Campus life') . ' at ' . getSiteName();
             ?>
+            <figure class="gallery-item" data-category="<?php echo htmlspecialchars($photo['category']); ?>">
+                <a href="<?php echo htmlspecialchars($photo['image_path']); ?>" class="gallery-link" data-caption="<?php echo htmlspecialchars($caption !== '' ? $caption : $category_name); ?>" aria-label="Open photo: <?php echo htmlspecialchars($alt); ?>">
+                    <img src="<?php echo htmlspecialchars($thumb['src']); ?>" alt="<?php echo htmlspecialchars($alt); ?>"
+                         <?php if ($thumb['width']): ?>width="<?php echo $thumb['width']; ?>" height="<?php echo $thumb['height']; ?>"<?php endif; ?>
+                         <?php echo $i < 8 ? '' : 'loading="lazy"'; ?> decoding="async" class="gallery-img">
+                    <span class="gallery-zoom" aria-hidden="true"><i class="fas fa-expand"></i></span>
+                </a>
+                <?php if ($caption !== '' || $category_name !== ''): ?>
+                <figcaption class="gallery-caption"><?php echo htmlspecialchars($caption !== '' ? $caption : $category_name); ?></figcaption>
+                <?php endif; ?>
+            </figure>
+            <?php endforeach; ?>
         </div>
+        <?php else: ?>
+            <?php renderEmptyState('fa-images', 'Photos coming soon', 'We are adding photos of our classes, events and achievements. Please check back soon.'); ?>
+        <?php endif; ?>
     </div>
 </section>
 
-<script>
-function filterGallery(category) {
-    const items = document.querySelectorAll('.gallery-item');
-    const buttons = document.querySelectorAll('button[onclick^="filterGallery"]');
-
-    // Update button styles
-    buttons.forEach(btn => {
-        btn.style.background = 'var(--secondary-color)';
-        btn.style.color = 'var(--primary-color)';
-        btn.style.border = '2px solid var(--primary-color)';
-    });
-
-    event.target.style.background = 'var(--accent-color)';
-    event.target.style.color = 'var(--primary-color)';
-    event.target.style.border = 'none';
-
-    // Filter items
-    items.forEach(item => {
-        if (category === 'all' || item.dataset.category === category) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-</script>
+<?php if (!empty($videos)): ?>
+<!-- Videos: a thumbnail and play button first; the YouTube player only loads when pressed -->
+<section id="videos">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="eyebrow">Watch</span>
+            <h2>School Videos</h2>
+            <p>Events, activities and celebrations at <?php echo htmlspecialchars(getSiteName()); ?></p>
+        </div>
+        <div class="video-grid">
+            <?php foreach ($videos as $video): $vid = htmlspecialchars($video['youtube_id']); ?>
+            <article class="video-card reveal">
+                <button type="button" class="video-frame" data-youtube="<?php echo $vid; ?>" aria-label="Play video: <?php echo htmlspecialchars($video['title']); ?>">
+                    <img src="https://i.ytimg.com/vi/<?php echo $vid; ?>/hqdefault.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
+                    <span class="video-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                </button>
+                <div class="video-body">
+                    <h3><?php echo htmlspecialchars($video['title']); ?></h3>
+                    <?php if (!empty($video['description'])): ?><p><?php echo htmlspecialchars($video['description']); ?></p><?php endif; ?>
+                </div>
+            </article>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>

@@ -396,137 +396,131 @@ function validateForm(formId) {
     return isValid;
 }
 
-// Gallery Lightbox
-function createLightbox() {
-    const galleryImages = document.querySelectorAll('.gallery-item img');
+// Photo gallery (gallery.php): category filters, an accessible lightbox and click-to-play videos
+function initGallery() {
+    const grid = document.getElementById('galleryGrid');
 
-    if (galleryImages.length === 0) return;
+    // Category filters
+    const filters = document.querySelectorAll('.gallery-filter');
+    filters.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.dataset.filter;
+            filters.forEach(b => {
+                const on = b === btn;
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+            grid.querySelectorAll('.gallery-item').forEach(item => {
+                item.hidden = !(filter === 'all' || item.dataset.category === filter);
+            });
+        });
+    });
 
-    // Create lightbox elements
-    const lightbox = document.createElement('div');
-    lightbox.className = 'lightbox';
-    lightbox.innerHTML = `
-        <div class="lightbox-content">
-            <span class="lightbox-close">&times;</span>
-            <img src="" alt="">
-            <div class="lightbox-nav">
-                <button class="lightbox-prev">&#10094;</button>
-                <button class="lightbox-next">&#10095;</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(lightbox);
+    // Lightbox: steps only through the photos the current filter shows
+    if (grid) {
+        const box = document.createElement('div');
+        box.className = 'lightbox';
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-modal', 'true');
+        box.setAttribute('aria-label', 'Photo viewer');
+        box.hidden = true;
+        box.innerHTML = `
+            <button type="button" class="lightbox-close" aria-label="Close"><i class="fas fa-xmark"></i></button>
+            <button type="button" class="lightbox-arrow lightbox-prev" aria-label="Previous photo"><i class="fas fa-chevron-left"></i></button>
+            <figure class="lightbox-figure">
+                <img alt="">
+                <figcaption><span class="lightbox-caption"></span><span class="lightbox-count"></span></figcaption>
+            </figure>
+            <button type="button" class="lightbox-arrow lightbox-next" aria-label="Next photo"><i class="fas fa-chevron-right"></i></button>`;
+        document.body.appendChild(box);
 
-    const lightboxImg = lightbox.querySelector('img');
-    const closeBtn = lightbox.querySelector('.lightbox-close');
-    const prevBtn = lightbox.querySelector('.lightbox-prev');
-    const nextBtn = lightbox.querySelector('.lightbox-next');
+        const img = box.querySelector('img');
+        const caption = box.querySelector('.lightbox-caption');
+        const count = box.querySelector('.lightbox-count');
+        let items = [];
+        let index = 0;
+        let opener = null;
 
-    let currentIndex = 0;
+        const visibleLinks = () => Array.from(grid.querySelectorAll('.gallery-item:not([hidden]) .gallery-link'));
 
-    function showImage(index) {
-        currentIndex = index;
-        lightboxImg.src = galleryImages[index].src;
-        lightbox.style.display = 'flex';
+        function show(i) {
+            index = (i + items.length) % items.length;
+            const link = items[index];
+            img.src = link.getAttribute('href');
+            img.alt = link.querySelector('img').alt;
+            caption.textContent = link.dataset.caption || '';
+            count.textContent = (index + 1) + ' / ' + items.length;
+            // Warm the cache for the neighbours so next/previous feel instant
+            [index + 1, index - 1].forEach(n => { const l = items[(n + items.length) % items.length]; if (l) { new Image().src = l.getAttribute('href'); } });
+        }
+
+        function open(link) {
+            items = visibleLinks();
+            opener = link;
+            box.hidden = false;
+            document.body.classList.add('lightbox-open');
+            show(items.indexOf(link));
+            box.querySelector('.lightbox-close').focus();
+        }
+
+        function close() {
+            box.hidden = true;
+            img.removeAttribute('src');
+            document.body.classList.remove('lightbox-open');
+            if (opener) { opener.focus(); }
+        }
+
+        grid.addEventListener('click', e => {
+            const link = e.target.closest('.gallery-link');
+            if (!link) return;
+            e.preventDefault();
+            open(link);
+        });
+
+        box.querySelector('.lightbox-close').addEventListener('click', close);
+        box.querySelector('.lightbox-prev').addEventListener('click', () => show(index - 1));
+        box.querySelector('.lightbox-next').addEventListener('click', () => show(index + 1));
+        box.addEventListener('click', e => { if (e.target === box) close(); });
+
+        document.addEventListener('keydown', e => {
+            if (box.hidden) return;
+            if (e.key === 'Escape') close();
+            else if (e.key === 'ArrowLeft') show(index - 1);
+            else if (e.key === 'ArrowRight') show(index + 1);
+            else if (e.key === 'Tab') {
+                // Keep keyboard focus inside the viewer
+                const controls = Array.from(box.querySelectorAll('button'));
+                const pos = controls.indexOf(document.activeElement);
+                e.preventDefault();
+                controls[(pos + (e.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
+            }
+        });
+
+        // Swipe left/right on phones
+        let startX = null;
+        box.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+        box.addEventListener('touchend', e => {
+            if (startX === null) return;
+            const dx = e.changedTouches[0].clientX - startX;
+            if (Math.abs(dx) > 50) show(index + (dx < 0 ? 1 : -1));
+            startX = null;
+        });
     }
 
-    galleryImages.forEach((img, index) => {
-        img.style.cursor = 'pointer';
-        img.addEventListener('click', () => showImage(index));
-    });
-
-    closeBtn.addEventListener('click', () => {
-        lightbox.style.display = 'none';
-    });
-
-    prevBtn.addEventListener('click', () => {
-        currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-        showImage(currentIndex);
-    });
-
-    nextBtn.addEventListener('click', () => {
-        currentIndex = (currentIndex + 1) % galleryImages.length;
-        showImage(currentIndex);
-    });
-
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
-            lightbox.style.display = 'none';
-        }
+    // Videos: swap the thumbnail for the YouTube player only when pressed (privacy-friendly domain, no load cost before)
+    document.querySelectorAll('.video-frame[data-youtube]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const iframe = document.createElement('iframe');
+            iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(btn.dataset.youtube) + '?autoplay=1&rel=0';
+            iframe.title = btn.getAttribute('aria-label').replace(/^Play video: /, '');
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            const holder = document.createElement('div');
+            holder.className = 'video-frame is-playing';
+            holder.appendChild(iframe);
+            btn.replaceWith(holder);
+        });
     });
 }
 
-// Initialize lightbox when DOM is ready
-document.addEventListener('DOMContentLoaded', createLightbox);
-
-// Add lightbox styles dynamically
-const lightboxStyles = `
-    .lightbox {
-        display: none;
-        position: fixed;
-        z-index: 9999;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.95);
-        align-items: center;
-        justify-content: center;
-    }
-
-    .lightbox-content {
-        position: relative;
-        max-width: 90%;
-        max-height: 90%;
-    }
-
-    .lightbox-content img {
-        max-width: 100%;
-        max-height: 90vh;
-        object-fit: contain;
-    }
-
-    .lightbox-close {
-        position: absolute;
-        top: -40px;
-        right: 0;
-        color: #fff;
-        font-size: 40px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: color 0.3s;
-    }
-
-    .lightbox-close:hover {
-        color: #B3262D;
-    }
-
-    .lightbox-nav button {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        border: none;
-        padding: 15px 20px;
-        font-size: 24px;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-
-    .lightbox-nav button:hover {
-        background: rgba(255, 255, 255, 0.4);
-    }
-
-    .lightbox-prev {
-        left: -60px;
-    }
-
-    .lightbox-next {
-        right: -60px;
-    }
-`;
-
-const styleSheet = document.createElement('style');
-styleSheet.textContent = lightboxStyles;
-document.head.appendChild(styleSheet);
+document.addEventListener('DOMContentLoaded', initGallery);

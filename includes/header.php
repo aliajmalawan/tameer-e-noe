@@ -14,6 +14,7 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5F6D3D">
     <title><?php echo htmlspecialchars($full_title); ?></title>
     <meta name="description" content="<?php echo htmlspecialchars($meta_description); ?>">
     <meta name="keywords" content="Tameer-e-Nau Public School, school in Hasilpur, Canal View Hasilpur school, quality education in Hasilpur, Tameer-e-Nau School">
@@ -40,7 +41,9 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Web fonts (text shows in the fallback font until they arrive): loaded without blocking the first paint -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap"></noscript>
 
     <!-- Structured Data (helps Google show rich results / knowledge panel) -->
     <script type="application/ld+json">
@@ -87,7 +90,9 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
     </style>
 
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Icons: loaded without blocking the first paint -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
     <!-- Favicon -->
     <link rel="icon" href="favicon.ico" sizes="any">

@@ -371,4 +371,84 @@ function savePublicDocument($file, $destDir, $baseFilename, $maxBytes = 8388608)
 
     return ['error' => 'Please upload a PDF, JPG, PNG or WebP file.'];
 }
+
+/**
+ * Small WebP copy of a site image for grids and cards (made once, then reused).
+ * uploads/gallery/photo.jpg -> uploads/gallery/thumbs/photo-w640.webp
+ * Returns ['src' => path, 'width' => w, 'height' => h]; falls back to the original
+ * file when the thumbnail can't be made (no GD/WebP, unreadable or tiny image).
+ * $path is relative to the site root, the same form stored in the database.
+ */
+function mediaThumb($path, $width = 640, $quality = 78) {
+    $root = dirname(__DIR__) . '/';
+    $path = ltrim((string) $path, '/');
+    $full = $root . $path;
+    $fallback = ['src' => $path, 'width' => 0, 'height' => 0];
+
+    if ($path === '' || strpos($path, '..') !== false || !is_file($full)) {
+        return $fallback;
+    }
+    $info = @getimagesize($full);
+    if (!$info) {
+        return $fallback;
+    }
+    $fallback['width'] = $info[0];
+    $fallback['height'] = $info[1];
+    if ($info[0] <= $width || !function_exists('imagewebp')) {
+        return $fallback;   // already small enough, or no WebP support on this server
+    }
+
+    $thumb_rel = dirname($path) . '/thumbs/' . pathinfo($path, PATHINFO_FILENAME) . '-w' . $width . '.webp';
+    $thumb_full = $root . $thumb_rel;
+    $height = (int) round($info[1] * $width / $info[0]);
+
+    // (Re)build when missing or older than the original (the photo was replaced)
+    if (!is_file($thumb_full) || filemtime($thumb_full) < filemtime($full)) {
+        switch ($info[2]) {
+            case IMAGETYPE_JPEG: $src = @imagecreatefromjpeg($full); break;
+            case IMAGETYPE_PNG:  $src = @imagecreatefrompng($full); break;
+            case IMAGETYPE_WEBP: $src = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($full) : false; break;
+            default: $src = false;
+        }
+        if (!$src) {
+            return $fallback;
+        }
+        $dst = imagecreatetruecolor($width, $height);
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $width, $height, $info[0], $info[1]);
+        if (!is_dir(dirname($thumb_full))) {
+            @mkdir(dirname($thumb_full), 0755, true);
+        }
+        $ok = @imagewebp($dst, $thumb_full, $quality);
+        imagedestroy($src);
+        imagedestroy($dst);
+        if (!$ok) {
+            return $fallback;
+        }
+    }
+    return ['src' => $thumb_rel, 'width' => $width, 'height' => $height];
+}
+
+/**
+ * CSS background-image value that serves a WebP twin (photo.webp next to photo.jpg)
+ * to browsers that support it. Creates the twin on first use when it's missing.
+ * Use as: style="background-image: url(...); background-image: <this>"
+ */
+function webpBackground($path) {
+    $root = dirname(__DIR__) . '/';
+    $path = ltrim((string) $path, '/');
+    $webp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $path);
+    if ($webp === $path || !is_file($root . $path)) {
+        return '';
+    }
+    if (!is_file($root . $webp) || filemtime($root . $webp) < filemtime($root . $path)) {
+        createWebpTwin($root . $path);
+    }
+    if (!is_file($root . $webp)) {
+        return '';
+    }
+    $type = preg_match('/\.png$/i', $path) ? 'image/png' : 'image/jpeg';
+    return 'image-set(url(\'' . htmlspecialchars($webp) . '\') type("image/webp"), url(\'' . htmlspecialchars($path) . '\') type("' . $type . '"))';
+}
 ?>
