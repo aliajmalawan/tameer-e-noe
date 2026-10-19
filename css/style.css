@@ -4202,3 +4202,158 @@ body.lightbox-open { overflow: hidden; }
 
 /* Spam trap field on public forms: hidden from people (and screen readers), seen by bots */
 .form-hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ==========================================================================
+   Footer: bottom links on every size, and a compact mobile layout
+   ========================================================================== */
+.footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 24px;
+    text-align: left;
+}
+
+.footer-legal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-legal a { color: rgba(255, 255, 255, 0.7); }
+.footer-legal a:hover { color: var(--secondary); }
+.footer-legal span { color: rgba(255, 255, 255, 0.35); }
+
+/* Call / Apply buttons: phones only (on desktop the header already has them) */
+.footer-actions { display: none; }
+
+@media (max-width: 768px) {
+    footer { padding: 44px 0 20px; }
+
+    .footer-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px 20px;
+        margin-bottom: 20px;
+        padding-bottom: 28px;
+    }
+
+    /* Brand block: centred, logo above the name */
+    .footer-brand {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding-bottom: 28px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .footer-brand .footer-logo {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .footer-brand .footer-logo img { width: 72px; height: 72px; }
+    .footer-brand .footer-logo strong { font-size: 19px; }
+    .footer-brand > p { font-size: 14px; line-height: 1.75; max-width: 440px; margin: 0 auto; }
+    .footer-brand .social-links { justify-content: center; }
+
+    /* Quick Links and Explore side by side, left-aligned */
+    .footer-section.footer-links { text-align: left; }
+
+    .footer-section .footer-heading {
+        position: relative;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        font-size: 15px;
+    }
+
+    .footer-section .footer-heading::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 28px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--accent);
+    }
+
+    .footer-links ul li { margin: 0; }
+
+    .footer-links ul a {
+        display: block;
+        padding: 7px 0;
+        font-size: 14.5px;
+        line-height: 1.4;
+    }
+
+    /* Contact: a card with one tappable row per detail */
+    .footer-contact {
+        grid-column: 1 / -1;
+        text-align: left;
+        padding: 20px 18px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius-lg);
+    }
+
+    .footer-contact p {
+        align-items: center;
+        gap: 14px;
+        margin: 0;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 14.5px;
+        line-height: 1.5;
+    }
+
+    .footer-contact p:last-of-type { border-bottom: 0; }
+
+    .footer-contact p i {
+        width: 36px;
+        height: 36px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(181, 194, 123, 0.14);
+        font-size: 14px;
+    }
+
+    .footer-contact p a { flex: 1; color: rgba(255, 255, 255, 0.85); word-break: break-word; }
+
+    .footer-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .footer-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 46px;
+        border-radius: var(--radius-pill);
+        border: 1.5px solid rgba(255, 255, 255, 0.35);
+        color: var(--white) !important;
+        font-weight: 600;
+        font-size: 14.5px;
+    }
+
+    .footer-action.is-primary { background: var(--accent); border-color: var(--accent); }
+    .footer-action:only-child { grid-column: 1 / -1; }
+
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 360px) {
+    .footer-content { gap: 28px 14px; }
+    .footer-links ul a { font-size: 14px; }
+}

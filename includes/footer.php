@@ -31,7 +31,7 @@
                     <?php endif; ?>
                 </div>
 
-                <div class="footer-section">
+                <div class="footer-section footer-links">
                     <h2 class="footer-heading">Quick Links</h2>
                     <ul>
                         <li><a href="./">Home</a></li>
@@ -43,7 +43,7 @@
                     </ul>
                 </div>
 
-                <div class="footer-section">
+                <div class="footer-section footer-links">
                     <h2 class="footer-heading">Explore</h2>
                     <ul>
                         <li><a href="faculty">Our Faculty</a></li>
@@ -54,7 +54,7 @@
                     </ul>
                 </div>
 
-                <div class="footer-section">
+                <div class="footer-section footer-contact">
                     <h2 class="footer-heading">Contact Info</h2>
                     <p><i class="fas fa-map-marker-alt"></i> <span><?php echo nl2br(htmlspecialchars(getSiteAddress())); ?></span></p>
                     <?php foreach (array_filter(array_map('trim', explode(',', getSitePhone()))) as $number): ?>
@@ -64,11 +64,19 @@
                         <p><i class="fas fa-envelope"></i> <a href="mailto:<?php echo htmlspecialchars(getSiteEmail()); ?>"><?php echo htmlspecialchars(getSiteEmail()); ?></a></p>
                     <?php endif; ?>
                     <p><i class="fas fa-clock"></i> <span><?php echo htmlspecialchars(getOfficeHours()); ?></span></p>
+                    <?php $footer_phone = trim(explode(',', getSitePhone())[0]); ?>
+                    <div class="footer-actions">
+                        <?php if ($footer_phone !== ''): ?>
+                        <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $footer_phone)); ?>" class="footer-action"><i class="fas fa-phone"></i> Call Now</a>
+                        <?php endif; ?>
+                        <a href="admission" class="footer-action is-primary"><i class="fas fa-pen-to-square"></i> Apply Online</a>
+                    </div>
                 </div>
             </div>
 
             <div class="footer-bottom">
                 <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(getSiteName()); ?>. All Rights Reserved.</p>
+                <p class="footer-legal"><a href="privacy-policy.html">Privacy Policy</a><span aria-hidden="true">&middot;</span><a href="contact">Contact</a></p>
             </div>
         </div>
     </footer>
