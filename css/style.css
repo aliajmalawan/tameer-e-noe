@@ -3587,3 +3587,231 @@ a.notice-item:hover { color: var(--primary-dark); }
 @media (max-width: 600px) {
     .notice-label { font-size: 12px; padding: 10px 14px; }
 }
+
+/* ==========================================================================
+   Leadership messages (includes/leadership_section.php)
+   ========================================================================== */
+.leader-card {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 50px;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 50px;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.leader-card:last-child { margin-bottom: 0; }
+
+/* Photo on the right for every second message */
+.leader-card-reverse { grid-template-columns: 1fr 300px; }
+.leader-card-reverse .leader-profile { order: 2; }
+
+.leader-profile { text-align: center; }
+
+.leader-photo {
+    position: relative;
+    width: 230px;
+    height: 230px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 5px solid var(--accent);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.leader-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+}
+
+/* Fallback icon, covered by the photo when one loads */
+.leader-photo .fa-user-tie { font-size: 72px; color: var(--white); }
+
+.leader-profile h3 {
+    color: var(--primary-dark);
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.leader-name {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 19px;
+    margin-bottom: 4px;
+}
+
+.leader-designation {
+    color: var(--text-light);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.leader-message {
+    position: relative;
+    padding-left: 30px;
+    border-left: 4px solid var(--accent);
+}
+
+.leader-quote {
+    position: absolute;
+    top: -10px;
+    left: -20px;
+    font-size: 40px;
+    color: var(--accent);
+    opacity: .3;
+}
+
+.leader-text {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text);
+}
+
+.leader-sign {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid var(--border-color);
+}
+
+.leader-sign img { height: 50px; margin-bottom: 10px; }
+
+.leader-sign-name {
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 16px;
+}
+
+/* ==========================================================================
+   Assessment block (home)
+   ========================================================================== */
+.assessment-copy h2 { margin-bottom: 20px; }
+.assessment-copy p { margin-bottom: 15px; line-height: 1.8; color: var(--text-light); }
+.assessment-copy p:last-of-type { margin-bottom: 25px; }
+
+.assessment-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 40px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.assessment-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.assessment-icon {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--white);
+    font-size: 22px;
+}
+
+.assessment-item strong {
+    display: block;
+    color: var(--white);
+    font-size: 17px;
+    margin-bottom: 4px;
+}
+
+.assessment-item span { color: rgba(255, 255, 255, 0.8); font-size: 14px; }
+
+/* ==========================================================================
+   Responsive layer
+   Laptop (≤1180) · Tablet (≤960) · Small tablet / large phone (≤768) · Phone (≤600)
+   ========================================================================== */
+
+/* Laptop: slightly tighter two-column blocks */
+@media (max-width: 1180px) {
+    .leader-card { grid-template-columns: 240px 1fr; gap: 36px; padding: 40px; }
+    .leader-card-reverse { grid-template-columns: 1fr 240px; }
+    .leader-photo { width: 200px; height: 200px; }
+    .grid-2 { gap: 36px; }
+}
+
+/* Tablet: four-across grids become two-across */
+@media (max-width: 960px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 22px; }
+    .card-grid.level-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .faq-contact { grid-template-columns: 1fr; }
+}
+
+/* Small tablet / large phone: stack the leadership cards, photo first */
+@media (max-width: 768px) {
+    .leader-card,
+    .leader-card-reverse {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 32px 24px;
+    }
+
+    .leader-card-reverse .leader-profile { order: 0; }
+    .leader-photo { width: 170px; height: 170px; }
+
+    /* Quote mark sits above the text instead of eating the left margin */
+    .leader-message { padding-left: 18px; }
+    .leader-quote { position: static; display: block; font-size: 30px; margin-bottom: 8px; }
+    .leader-text { font-size: 15.5px; line-height: 1.75; }
+
+    .assessment-panel { padding: 28px 22px; gap: 22px; }
+}
+
+/* Phone */
+@media (max-width: 600px) {
+    /* Stats: 2 × 2 instead of one long column */
+    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 28px 12px; }
+    .stat-item h3 { font-size: 30px; }
+    .stat-item p { font-size: 12px; letter-spacing: .04em; }
+
+    /* Feature cards: icon beside the text, so the list is half as long */
+    .why-grid .card,
+    .grid-4 .card:not(.text-center) {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        column-gap: 16px;
+        padding: 22px 20px;
+    }
+
+    .why-grid .card .card-icon,
+    .grid-4 .card:not(.text-center) .card-icon {
+        grid-row: span 2;
+        width: 48px;
+        height: 48px;
+        font-size: 19px;
+        margin: 0;
+    }
+
+    .why-grid .card h3 { font-size: 17px; margin-bottom: 4px; }
+    .why-grid .card p { font-size: 14.5px; }
+
+    .grid-4 { grid-template-columns: 1fr; gap: 16px; }
+    .card-grid.level-grid { grid-template-columns: 1fr; }
+
+    .philosophy-inner p { font-size: 16px; }
+    .faq-question { padding: 16px 18px; font-size: 15px; }
+    .faq-answer p { padding: 0 18px 16px; }
+    .faq-form-card { padding: 24px 18px; }
+}

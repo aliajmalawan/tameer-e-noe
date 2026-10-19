@@ -300,29 +300,25 @@ foreach ([1 => 'fa-seedling', 2 => 'fa-book-reader', 3 => 'fa-lightbulb', 4 => '
 <section>
     <div class="container">
         <div class="grid-2 reveal">
-            <div>
+            <div class="assessment-copy">
                 <span class="eyebrow"><?php echo htmlspecialchars(content('home_assessment_eyebrow')); ?></span>
-                <h2 style="margin-bottom: 20px;"><?php echo htmlspecialchars(content('home_assessment_heading')); ?></h2>
-                <p style="margin-bottom: 15px; line-height: 1.8;"><?php echo nl2br(htmlspecialchars(content('assessment_paragraph_1'))); ?></p>
-                <p style="margin-bottom: 25px; line-height: 1.8;"><?php echo nl2br(htmlspecialchars(content('assessment_paragraph_2'))); ?></p>
+                <h2><?php echo htmlspecialchars(content('home_assessment_heading')); ?></h2>
+                <p><?php echo nl2br(htmlspecialchars(content('assessment_paragraph_1'))); ?></p>
+                <p><?php echo nl2br(htmlspecialchars(content('assessment_paragraph_2'))); ?></p>
                 <a href="about.php" class="btn btn-primary">Learn More</a>
             </div>
-            <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 40px;">
-                <div style="display: flex; flex-direction: column; gap: 28px;">
-                    <?php
-                    $assessment_features = mysqli_query($conn, "SELECT DISTINCT * FROM feature_cards WHERE section = 'assessment_features' AND status = 'active' ORDER BY display_order ASC, id ASC");
-                    if ($assessment_features) {
-                        while ($f = mysqli_fetch_assoc($assessment_features)) {
-                            echo '<div style="display: flex; align-items: center; gap: 18px;">';
-                            echo '<div style="width: 54px; height: 54px; border-radius: var(--radius-md); background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; flex-shrink: 0;"><i class="' . htmlspecialchars($f['icon']) . '"></i></div>';
-                            echo '<div>';
-                            echo '<strong style="display: block; color: #fff; font-size: 17px; margin-bottom: 4px;">' . htmlspecialchars($f['title']) . '</strong>';
-                            echo '<span style="color: rgba(255,255,255,0.75); font-size: 14px;">' . htmlspecialchars($f['description']) . '</span>';
-                            echo '</div></div>';
-                        }
-                    }
-                    ?>
+            <div class="assessment-panel">
+                <?php
+                $assessment_features = mysqli_query($conn, "SELECT DISTINCT * FROM feature_cards WHERE section = 'assessment_features' AND status = 'active' ORDER BY display_order ASC, id ASC");
+                while ($assessment_features && ($f = mysqli_fetch_assoc($assessment_features))): ?>
+                <div class="assessment-item">
+                    <span class="assessment-icon"><i class="<?php echo htmlspecialchars($f['icon']); ?>"></i></span>
+                    <div>
+                        <strong><?php echo htmlspecialchars($f['title']); ?></strong>
+                        <span><?php echo htmlspecialchars($f['description']); ?></span>
+                    </div>
                 </div>
+                <?php endwhile; ?>
             </div>
         </div>
     </div>

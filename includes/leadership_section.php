@@ -10,75 +10,40 @@
 
         <?php
         $leaders = getLeadershipMessages();
-        if (!empty($leaders)):
-            $count = 0;
-            foreach ($leaders as $leader):
-                $count++;
-                $is_reverse = ($count % 2 == 0);
+        $count = 0;
+        foreach ($leaders as $leader):
+            $count++;
+            // Every second message puts the photo on the right (desktop only; on small screens the photo always comes first)
+            $is_reverse = ($count % 2 == 0);
         ?>
 
         <!-- Leadership Message: <?php echo htmlspecialchars($leader['name']); ?> -->
-        <div class="reveal" style="display: grid; grid-template-columns: <?php echo $is_reverse ? '1fr 350px' : '350px 1fr'; ?>; gap: 50px; align-items: center; margin-bottom: <?php echo ($count == count($leaders)) ? '40px' : '40px'; ?>; background: var(--surface); padding: 50px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
-
-            <?php if ($is_reverse): ?>
-            <!-- Message Content (Left) -->
-            <div>
-                <div style="position: relative; padding-left: 30px; border-left: 4px solid var(--accent-color);">
-                    <i class="fas fa-quote-left" style="font-size: 40px; color: var(--accent-color); opacity: 0.3; position: absolute; top: -10px; left: -20px;"></i>
-                    <div style="font-size: 16px; line-height: 1.8; color: var(--text-dark);">
-                        <?php echo nl2br(htmlspecialchars($leader['message'])); ?>
-                    </div>
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid var(--border-color);">
-                        <?php if (!empty($leader['signature'])): ?>
-                            <img src="<?php echo htmlspecialchars($leader['signature']); ?>" alt="Signature" style="height: 50px; margin-bottom: 10px;" onerror="this.style.display='none'">
-                        <?php endif; ?>
-                        <p style="font-weight: 600; color: var(--primary-color); font-size: 16px;"><?php echo htmlspecialchars($leader['name']); ?></p>
-                        <p style="font-size: 14px; color: var(--text-light);"><?php echo htmlspecialchars($leader['designation']); ?></p>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <!-- Profile (Right or Left) -->
-            <div style="text-align: center;">
-                <div style="width: 250px; height: 250px; border-radius: 50%; overflow: hidden; margin: 0 auto 20px; border: 5px solid var(--accent-color); box-shadow: 0 10px 30px rgba(0,0,0,0.2); background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));">
+        <div class="leader-card reveal<?php echo $is_reverse ? ' leader-card-reverse' : ''; ?>">
+            <div class="leader-profile">
+                <div class="leader-photo">
                     <?php if (!empty($leader['photo'])): ?>
-                        <img src="<?php echo htmlspecialchars($leader['photo']); ?>" alt="<?php echo htmlspecialchars($leader['name']); ?>" style="width: 100%; height: 100%; object-fit: cover; object-position: center top;" onerror="this.parentElement.innerHTML='<i class=\'fas fa-user-tie\' style=\'font-size: 80px; color: white; display: flex; align-items: center; justify-content: center; height: 100%;\'></i>'">
-                    <?php else: ?>
-                        <i class='fas fa-user-tie' style='font-size: 80px; color: white; display: flex; align-items: center; justify-content: center; height: 100%;'></i>
+                        <img src="<?php echo htmlspecialchars($leader['photo']); ?>" alt="<?php echo htmlspecialchars($leader['name']); ?>" loading="lazy" onerror="this.remove()">
                     <?php endif; ?>
+                    <i class="fas fa-user-tie" aria-hidden="true"></i>
                 </div>
-                <h3 style="color: var(--primary-color); font-size: 24px; margin-bottom: 5px;"><?php echo htmlspecialchars($leader['role_title'] ?? 'Leadership Message'); ?></h3>
-                <p style="color: var(--text-dark); font-weight: 700; font-size: 20px; margin-bottom: 5px;"><?php echo htmlspecialchars($leader['name']); ?></p>
-                <p style="color: var(--text-light); font-size: 14px; line-height: 1.6;"><?php echo htmlspecialchars($leader['designation']); ?></p>
+                <h3><?php echo htmlspecialchars($leader['role_title'] ?? 'Leadership Message'); ?></h3>
+                <p class="leader-name"><?php echo htmlspecialchars($leader['name']); ?></p>
+                <p class="leader-designation"><?php echo htmlspecialchars($leader['designation']); ?></p>
             </div>
 
-            <?php if (!$is_reverse): ?>
-            <!-- Message Content (Right) -->
-            <div>
-                <div style="position: relative; padding-left: 30px; border-left: 4px solid var(--accent-color);">
-                    <i class="fas fa-quote-left" style="font-size: 40px; color: var(--accent-color); opacity: 0.3; position: absolute; top: -10px; left: -20px;"></i>
-                    <div style="font-size: 16px; line-height: 1.8; color: var(--text-dark);">
-                        <?php echo nl2br(htmlspecialchars($leader['message'])); ?>
-                    </div>
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid var(--border-color);">
-                        <?php if (!empty($leader['signature'])): ?>
-                            <img src="<?php echo htmlspecialchars($leader['signature']); ?>" alt="Signature" style="height: 50px; margin-bottom: 10px;" onerror="this.style.display='none'">
-                        <?php endif; ?>
-                        <p style="font-weight: 600; color: var(--primary-color); font-size: 16px;"><?php echo htmlspecialchars($leader['name']); ?></p>
-                        <p style="font-size: 14px; color: var(--text-light);"><?php echo htmlspecialchars($leader['designation']); ?></p>
-                    </div>
+            <div class="leader-message">
+                <i class="fas fa-quote-left leader-quote" aria-hidden="true"></i>
+                <div class="leader-text"><?php echo nl2br(htmlspecialchars($leader['message'])); ?></div>
+                <div class="leader-sign">
+                    <?php if (!empty($leader['signature'])): ?>
+                        <img src="<?php echo htmlspecialchars($leader['signature']); ?>" alt="Signature" onerror="this.style.display='none'">
+                    <?php endif; ?>
+                    <p class="leader-sign-name"><?php echo htmlspecialchars($leader['name']); ?></p>
+                    <p class="leader-designation"><?php echo htmlspecialchars($leader['designation']); ?></p>
                 </div>
             </div>
-            <?php endif; ?>
-
         </div>
 
-        <?php
-            endforeach;
-        else:
-        ?>
-            <p style="text-align: center; color: var(--text-light); padding: 40px;">No leadership messages available at the moment.</p>
-        <?php endif; ?>
+        <?php endforeach; ?>
     </div>
 </section>
