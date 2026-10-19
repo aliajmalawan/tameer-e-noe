@@ -53,9 +53,9 @@ $meta_description = content('seo_about_description');
 <section>
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">Our Values</span>
-            <h2>Our Core Values</h2>
-            <p>The principles that guide everything we do</p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('about_values_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('about_values_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('about_values_subtitle')); ?></p>
         </div>
         <div class="card-grid">
             <?php renderFeatureCardGrid('core_values'); ?>
@@ -99,11 +99,11 @@ $meta_description = content('seo_about_description');
 <section>
     <div class="container">
         <div class="cta-banner reveal">
-            <h2>Join Our Educational Community</h2>
-            <p>Discover how <?php echo getSiteName(); ?> can help you achieve your academic goals</p>
+            <h2><?php echo htmlspecialchars(content('about_cta_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('about_cta_text')); ?></p>
             <div class="btn-group" style="justify-content: center;">
-                <a href="admission.php" class="btn btn-secondary">Apply for Admission</a>
-                <a href="contact.php" class="btn btn-outline">Contact Us</a>
+                <a href="admission" class="btn btn-secondary">Apply for Admission</a>
+                <a href="contact" class="btn btn-outline">Contact Us</a>
             </div>
         </div>
     </div>

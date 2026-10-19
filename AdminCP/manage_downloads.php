@@ -1,6 +1,6 @@
 <?php
-session_start();
 require_once '../includes/config.php';
+require_once __DIR__ . '/includes/admin_guard.php';   // login check, idle timeout, CSRF protection
 require_once '../includes/image_helper.php';
 
 if (!isset($_SESSION['admin_logged_in'])) {
@@ -19,14 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_download'])) {
 
     // File upload
     if (isset($_FILES['file']) && $_FILES['file']['error'] == 0) {
-        $file_name = $_FILES['file']['name'];
         $file_tmp = $_FILES['file']['tmp_name'];
-        $file_type = $_FILES['file']['type'];
-        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        $file_ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+        // The visitor-facing name keeps only safe characters (no quotes, slashes or spaces),
+        // so it can't break the SQL below, the page's HTML or the file path
+        $safe_base = trim(preg_replace('/[^A-Za-z0-9_-]+/', '-', pathinfo($_FILES['file']['name'], PATHINFO_FILENAME)), '-');
+        $file_name = mysqli_real_escape_string($conn, ($safe_base !== '' ? mb_substr($safe_base, 0, 80) : 'file') . '.' . $file_ext);
+        $file_type = mysqli_real_escape_string($conn, $file_ext);
 
         $allowed = array('pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'zip');
 
-        if (in_array($file_ext, $allowed)) {
+        if (in_array($file_ext, $allowed) && $_FILES['file']['size'] <= 20 * 1024 * 1024) {
             $new_file_name = time() . '_' . $file_name;
             $upload_path = '../uploads/downloads/' . $new_file_name;
             $db_path = 'uploads/downloads/' . $new_file_name; // Path for database (frontend use)

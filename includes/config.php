@@ -1,4 +1,24 @@
 <?php
+// Visitors never see PHP error details (file paths, queries) on the live site; they go to the error log.
+// On this computer (localhost) errors stay visible to help development.
+$is_local_request = in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true) || PHP_SAPI === 'cli';
+if (!$is_local_request) {
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+}
+
+// Session cookie: not readable by JavaScript, not sent with cross-site requests, HTTPS-only when the site uses HTTPS
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    ini_set('session.use_strict_mode', '1');
+}
+
 // Database Configuration
 // On Windows (XAMPP) "localhost" first tries IPv6 and can add ~2 seconds to every page;
 // 127.0.0.1 connects straight away. Linux hosting (cPanel) keeps "localhost", its fast local socket.
@@ -50,4 +70,7 @@ require_once __DIR__ . '/settings_helper.php';
 
 // Include theme helper functions
 require_once __DIR__ . '/theme_helper.php';
+
+// Spam protection and server-side checks for the public forms
+require_once __DIR__ . '/form_helper.php';
 ?>

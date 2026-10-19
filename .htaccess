@@ -1,4 +1,46 @@
-ErrorDocument 404 /tameer-e-noe/404.php
+# ---------------------------------------------------------------------------
+# Clean URLs: /about serves about.php. Works the same in a sub-folder
+# (localhost/tameer-e-noe/about) and at a domain root (example.com/about).
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Helper code and database scripts are never served directly
+    RewriteRule ^(includes|database)(/|$) - [F,L]
+
+    # sitemap.xml and robots.txt are generated for whichever domain the site runs on
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+    RewriteRule ^robots\.txt$ robots.php [L]
+
+    # Old .php addresses -> clean address (permanent), so bookmarks and search results keep working.
+    # Not for form posts (a redirect would drop the data) and not for the admin panel.
+    RewriteCond %{REQUEST_METHOD} !POST
+    RewriteCond %{REQUEST_URI} !/AdminCP/ [NC]
+    RewriteCond %{THE_REQUEST} \s/+((?:[^\s?]*/)?)index\.php[\s?] [NC]
+    RewriteRule ^ /%1 [R=301,L,NE]
+    RewriteCond %{REQUEST_METHOD} !POST
+    RewriteCond %{REQUEST_URI} !/AdminCP/ [NC]
+    RewriteCond %{THE_REQUEST} \s/+((?:[^\s?]*/)?)([a-z0-9_-]+)\.php[\s?] [NC]
+    RewriteCond %2 !^(sitemap|robots|404)$ [NC]
+    RewriteRule ^ /%1%2 [R=301,L,NE]
+
+    # /about/ -> /about (relative links on the page would otherwise break)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} ^(.+)/$
+    RewriteRule ^ %1 [R=301,L]
+
+    # Serve /about from about.php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^([a-z0-9_-]+)$ $1.php [NC,L]
+
+    # Any other address that does not exist: the friendly 404 page (it sends the 404 status itself)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !/AdminCP/ [NC]
+    RewriteRule ^ 404.php [L]
+</IfModule>
+
 
 # Compress text-based responses (HTML/CSS/JS/fonts) - images are already
 # compressed formats (JPEG/PNG) so gzipping them further wastes CPU for
@@ -38,3 +80,16 @@ ErrorDocument 404 /tameer-e-noe/404.php
 <FilesMatch "\.(sql|log)$|^error_log$">
     Require all denied
 </FilesMatch>
+
+# Security headers for every page
+<IfModule mod_headers.c>
+    # Browsers must not guess file types (stops some upload-based attacks)
+    Header always set X-Content-Type-Options "nosniff"
+    # Other sites can't show these pages inside a frame (clickjacking)
+    Header always set X-Frame-Options "SAMEORIGIN"
+    # Only the site's own address is sent to other sites when a visitor clicks a link
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Features the site never uses stay switched off
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    Header unset X-Powered-By
+</IfModule>

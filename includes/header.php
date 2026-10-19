@@ -7,7 +7,10 @@ $full_title = $is_home ? $site_name . ' | ' . $seo_location : ((!empty($page_tit
 $meta_description = $meta_description ?? $site_name . ' in ' . $seo_location . ' provides quality education with caring teachers and a focus on character building.';
 $site_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $site_base_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-$current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
+// One clean address per page (no .php, no query string): https://site/ for home, https://site/about for the rest.
+// Used for the canonical link and og:url, so /about.php, /about/ and ?utm=... all point search engines to the same URL.
+$page_slug = basename($_SERVER['SCRIPT_NAME'], '.php');
+$current_url = $site_base_url . '/' . ($page_slug === 'index' ? '' : $page_slug);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,6 +18,7 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#5F6D3D">
+    <?php if (basename($_SERVER['SCRIPT_NAME']) === '404.php'): ?><base href="<?php echo htmlspecialchars($site_base_url); ?>/"><?php // the 404 page can be shown for any nested address, so resolve its links from the site root ?><?php endif; ?>
     <title><?php echo htmlspecialchars($full_title); ?></title>
     <meta name="description" content="<?php echo htmlspecialchars($meta_description); ?>">
     <meta name="keywords" content="Tameer-e-Nau Public School, school in Hasilpur, Canal View Hasilpur school, quality education in Hasilpur, Tameer-e-Nau School">
@@ -67,7 +71,7 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
             '@type' => 'School',
             'name' => getSiteName(),
             'description' => $meta_description,
-            'url' => $site_base_url . '/index.php',
+            'url' => $site_base_url . '/',
             'logo' => $site_base_url . '/' . getLogoPath(),
             'telephone' => trim(getSitePhone()),
             'email' => hasSiteEmail() ? getSiteEmail() : '',
@@ -112,7 +116,7 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
     <header class="site-header" id="site-header">
         <div class="edu-topbar">
             <div class="container edu-topbar-inner">
-                <a class="brand" href="index.php" aria-label="<?php echo htmlspecialchars(getSiteName()); ?> - Home">
+                <a class="brand" href="./" aria-label="<?php echo htmlspecialchars(getSiteName()); ?> - Home">
                     <img src="<?php echo getLogoSmallPath(); ?>" alt="" class="brand-logo" width="56" height="56" onerror="this.style.display='none'">
                     <span class="brand-text">
                         <strong><?php echo htmlspecialchars(getSiteName()); ?></strong>
@@ -127,7 +131,7 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
                         <span><small>Call Us</small><strong><?php echo htmlspecialchars($topbar_phone); ?></strong></span>
                     </a>
                     <?php else: ?>
-                    <a class="edu-topbar-info" href="contact.php">
+                    <a class="edu-topbar-info" href="contact">
                         <span class="edu-topbar-info-icon"><i class="fas fa-location-dot"></i></span>
                         <span><small>Visit Us</small><strong><?php echo htmlspecialchars(trim(preg_split('/\r\n|\r|\n/', getSiteAddress())[0])); ?></strong></span>
                     </a>
@@ -138,7 +142,7 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
                         <span><small>Email Us</small><strong><?php echo htmlspecialchars(getSiteEmail()); ?></strong></span>
                     </a>
                     <?php else: ?>
-                    <a class="edu-topbar-info" href="contact.php">
+                    <a class="edu-topbar-info" href="contact">
                         <span class="edu-topbar-info-icon"><i class="fas fa-clock"></i></span>
                         <span><small>Office Hours</small><strong><?php echo htmlspecialchars(getOfficeHours()); ?></strong></span>
                     </a>
@@ -157,7 +161,7 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
                     </nav>
                     <?php endif; ?>
 
-                    <a class="edu-apply-btn" href="admission.php"><i class="fas fa-pen-to-square"></i> <?php echo htmlspecialchars(content('apply_button_label')); ?></a>
+                    <a class="edu-apply-btn" href="admission"><i class="fas fa-pen-to-square"></i> <?php echo htmlspecialchars(content('apply_button_label')); ?></a>
 
                     <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-nav">
                         <span class="nav-toggle-bar"></span>
@@ -173,34 +177,34 @@ $current_url = $site_scheme . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['R
         <nav class="edu-navbar" aria-label="Primary navigation">
             <div class="container edu-navbar-inner">
                 <div class="site-nav" id="site-nav">
-                    <a href="index.php"<?php echo $nav_active(['index.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>Home</a>
-                    <a href="about.php"<?php echo $nav_active(['about.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>About Us</a>
+                    <a href="./"<?php echo $nav_active(['index.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>Home</a>
+                    <a href="about"<?php echo $nav_active(['about.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>About Us</a>
 
                     <div class="nav-dropdown<?php echo $nav_active(['courses.php', 'faculty.php', 'examination.php', 'downloads.php']) ? ' is-active' : ''; ?>">
                         <span class="nav-dropdown-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">Academics <i class="fas fa-chevron-down nav-caret"></i></span>
                         <div class="nav-dropdown-panel">
-                            <a href="courses.php"<?php echo $nav_active(['courses.php']) ? ' class="is-active"' : ''; ?>>Courses &amp; Programs</a>
-                            <a href="faculty.php"<?php echo $nav_active(['faculty.php']) ? ' class="is-active"' : ''; ?>>Faculty</a>
-                            <a href="examination.php"<?php echo $nav_active(['examination.php']) ? ' class="is-active"' : ''; ?>>Examination</a>
-                            <a href="downloads.php"<?php echo $nav_active(['downloads.php']) ? ' class="is-active"' : ''; ?>>Downloads</a>
+                            <a href="courses"<?php echo $nav_active(['courses.php']) ? ' class="is-active"' : ''; ?>>Courses &amp; Programs</a>
+                            <a href="faculty"<?php echo $nav_active(['faculty.php']) ? ' class="is-active"' : ''; ?>>Faculty</a>
+                            <a href="examination"<?php echo $nav_active(['examination.php']) ? ' class="is-active"' : ''; ?>>Examination</a>
+                            <a href="downloads"<?php echo $nav_active(['downloads.php']) ? ' class="is-active"' : ''; ?>>Downloads</a>
                         </div>
                     </div>
 
-                    <a href="admission.php"<?php echo $nav_active(['admission.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>Admissions</a>
+                    <a href="admission"<?php echo $nav_active(['admission.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>Admissions</a>
 
                     <div class="nav-dropdown<?php echo $nav_active(['gallery.php', 'campuses.php', 'alumni.php']) ? ' is-active' : ''; ?>">
                         <span class="nav-dropdown-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">Campus Life <i class="fas fa-chevron-down nav-caret"></i></span>
                         <div class="nav-dropdown-panel">
-                            <a href="gallery.php"<?php echo $nav_active(['gallery.php']) ? ' class="is-active"' : ''; ?>>Photo Gallery</a>
-                            <a href="campuses.php"<?php echo $nav_active(['campuses.php']) ? ' class="is-active"' : ''; ?>>Our Campus</a>
-                            <a href="alumni.php"<?php echo $nav_active(['alumni.php']) ? ' class="is-active"' : ''; ?>>Alumni</a>
+                            <a href="gallery"<?php echo $nav_active(['gallery.php']) ? ' class="is-active"' : ''; ?>>Photo Gallery</a>
+                            <a href="campuses"<?php echo $nav_active(['campuses.php']) ? ' class="is-active"' : ''; ?>>Our Campuses</a>
+                            <a href="alumni"<?php echo $nav_active(['alumni.php']) ? ' class="is-active"' : ''; ?>>Alumni</a>
                         </div>
                     </div>
 
-                    <a href="events.php"<?php echo $nav_active(['events.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>News &amp; Events</a>
-                    <a href="contact.php"<?php echo $nav_active(['contact.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>Contact Us</a>
+                    <a href="events"<?php echo $nav_active(['events.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>News &amp; Events</a>
+                    <a href="contact"<?php echo $nav_active(['contact.php']) ? ' class="is-active" aria-current="page"' : ''; ?>>Contact Us</a>
 
-                    <a class="btn btn-secondary header-apply-btn" href="admission.php"><?php echo htmlspecialchars(content('apply_button_label')); ?></a>
+                    <a class="btn btn-secondary header-apply-btn" href="admission"><?php echo htmlspecialchars(content('apply_button_label')); ?></a>
                 </div>
             </div>
         </nav>

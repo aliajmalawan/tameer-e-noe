@@ -113,7 +113,7 @@ function getHeroContent() {
         'title' => getSetting('hero_title', 'Building Strong Foundations for a Brighter Future'),
         'description' => getSetting('hero_description', 'At Tameer-e-Nau Public School, we are committed to providing quality education, character development and a nurturing environment where every student can learn, grow and succeed.'),
         'button_text' => getSetting('hero_button_text', 'Apply Now'),
-        'button_link' => getSetting('hero_button_link', 'admission.php'),
+        'button_link' => getSetting('hero_button_link', 'admission'),
         'image' => content('hero_image')
     ];
 }
@@ -259,7 +259,7 @@ function renderUpdateCard($type, $row) {
     $body = $is_event ? ($row['description'] ?? '') : ($row['content'] ?? '');
     $plain = trim(strip_tags($body));
     $excerpt = mb_strlen($plain) > 120 ? rtrim(mb_substr($plain, 0, 120)) . '…' : $plain;
-    $anchor = 'events.php#' . ($is_event ? 'event-' : 'news-') . intval($row['id']);
+    $anchor = 'events#' . ($is_event ? 'event-' : 'news-') . intval($row['id']);
 
     echo '<article class="card update-card reveal">';
     echo '<a href="' . htmlspecialchars($anchor) . '" class="update-media" tabindex="-1" aria-hidden="true">';
@@ -334,7 +334,18 @@ function renderPageHero($image, $eyebrow, $title, $subtitle = '', $crumb = '', $
     echo '<div class="page-hero-bg" style="background-image: url(\'' . htmlspecialchars($image) . '\');' . ($webp_bg !== '' ? ' background-image: ' . $webp_bg . ';' : '') . '"></div>';
     echo '<div class="container"><div class="page-hero-content">';
     if ($crumb !== '') {
-        echo '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.php"><i class="fas fa-house" aria-hidden="true"></i> Home</a>'
+        // Same trail for search engines, so results can show "Home › About Us"
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $base = $scheme . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+        echo '<script type="application/ld+json">' . json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => $base . '/'],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => $crumb, 'item' => $base . '/' . basename($_SERVER['SCRIPT_NAME'], '.php')],
+            ],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>';
+        echo '<nav class="breadcrumb" aria-label="Breadcrumb"><a href="./"><i class="fas fa-house" aria-hidden="true"></i> Home</a>'
             . '<i class="fas fa-chevron-right" aria-hidden="true"></i><span aria-current="page">' . htmlspecialchars($crumb) . '</span></nav>';
     }
     if ($eyebrow !== '') {

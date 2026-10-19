@@ -336,3 +336,44 @@ body {
     .ad-panel-body { padding: 16px; }
     .ad-head { padding: 14px 16px; }
 }
+
+/* "Remove this photo" option under an image in edit forms */
+.remove-image {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: 1px dashed var(--accent, #B3262D);
+    border-radius: 8px;
+    color: var(--accent, #B3262D);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    width: fit-content;
+}
+.remove-image input { width: auto; margin: 0; accent-color: var(--accent, #B3262D); }
+.remove-image:has(input:checked) { background: #FBF1F1; }
+
+/* Faculty photos in the admin list and edit form */
+.faculty-photo-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.faculty-photo-thumb.is-empty { background: var(--soft-sage, #EEF1DF); color: var(--primary-dark, #5F6D3D); }
+.faculty-photo-preview {
+    display: block;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    margin: 6px 0 12px;
+    border: 3px solid var(--border-color, #DDE2CB);
+}

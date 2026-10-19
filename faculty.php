@@ -11,6 +11,7 @@ $meta_description = content('seo_faculty_description');
 <!-- Faculty Section -->
 <section class="bg-light">
     <div class="container">
+        <h2 class="sr-only">Our teachers</h2>
         <div class="card-grid">
             <?php
             // Fetch faculty from database
@@ -102,11 +103,11 @@ $meta_description = content('seo_faculty_description');
                 foreach ($default_faculty as $teacher) {
                     echo '<div class="card" style="text-align: center;">';
                     echo '<div style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 50px; box-shadow: var(--shadow-sm);"><i class="fas fa-chalkboard-teacher"></i></div>';
-                    echo '<h3>' . $teacher['name'] . '</h3>';
-                    echo '<p style="color: var(--accent-color); font-weight: 600; margin-bottom: 15px;">' . $teacher['designation'] . '</p>';
-                    echo '<p style="margin-bottom: 10px;"><strong>Subjects:</strong> ' . $teacher['subjects'] . '</p>';
-                    echo '<p style="margin-bottom: 10px;"><strong>Qualification:</strong> ' . $teacher['qualification'] . '</p>';
-                    echo '<p><strong>Experience:</strong> ' . $teacher['experience'] . ' years</p>';
+                    echo '<h3>' . htmlspecialchars($teacher['name']) . '</h3>';
+                    echo '<p style="color: var(--accent-color); font-weight: 600; margin-bottom: 15px;">' . htmlspecialchars($teacher['designation']) . '</p>';
+                    echo '<p style="margin-bottom: 10px;"><strong>Subjects:</strong> ' . htmlspecialchars($teacher['subjects']) . '</p>';
+                    echo '<p style="margin-bottom: 10px;"><strong>Qualification:</strong> ' . htmlspecialchars($teacher['qualification']) . '</p>';
+                    echo '<p><strong>Experience:</strong> ' . htmlspecialchars($teacher['experience']) . ' years</p>';
                     echo '</div>';
                 }
             }
@@ -119,9 +120,9 @@ $meta_description = content('seo_faculty_description');
 <section>
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">What Sets Us Apart</span>
-            <h2>Why Our Faculty Stands Out</h2>
-            <p>Qualities that make our teachers exceptional</p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('faculty_why_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('faculty_why_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('faculty_why_subtitle')); ?></p>
         </div>
         <div class="card-grid">
             <?php renderFeatureCardGrid('faculty_highlights'); ?>
@@ -133,11 +134,11 @@ $meta_description = content('seo_faculty_description');
 <section>
     <div class="container">
         <div class="cta-banner reveal">
-            <h2>Learn from the Best!</h2>
-            <p>Join <?php echo getSiteName(); ?> and experience quality teaching</p>
+            <h2><?php echo htmlspecialchars(content('faculty_cta_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('faculty_cta_text')); ?></p>
             <div class="btn-group" style="justify-content: center;">
-                <a href="admission.php" class="btn btn-secondary">Apply for Admission</a>
-                <a href="courses.php" class="btn btn-outline">View Courses</a>
+                <a href="admission" class="btn btn-secondary">Apply for Admission</a>
+                <a href="courses" class="btn btn-outline">View Courses</a>
             </div>
         </div>
     </div>

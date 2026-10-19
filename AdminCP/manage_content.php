@@ -4,8 +4,8 @@
  * Everything listed here comes from includes/content_fields.php; saved values go
  * to the settings table and the public pages read them through content().
  */
-session_start();
 require_once '../includes/config.php';
+require_once __DIR__ . '/includes/admin_guard.php';   // login check, idle timeout, CSRF protection
 require_once '../includes/image_helper.php';
 
 if (!isset($_SESSION['admin_logged_in'])) {
@@ -211,7 +211,11 @@ $current_logo = getLogoPath();
                 <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Open menu" aria-expanded="false" aria-controls="adminSidebar"><i class="fas fa-bars"></i></button>
                 <h1 style="color: var(--primary-color); margin:0;"><i class="fas fa-pen-ruler"></i> Page Content</h1>
             </div>
-            <a href="../index.php" target="_blank" class="btn btn-outline-dark" style="padding: 9px 20px;"><i class="fas fa-up-right-from-square"></i> View website</a>
+            <?php
+            // Open the page this tab edits (home tabs and site-wide settings open the home page)
+            $tab_page = in_array($active_tab, ['about', 'courses', 'admission', 'faculty', 'campuses', 'gallery', 'events', 'examination', 'alumni', 'downloads', 'contact'], true) ? $active_tab : '';
+            ?>
+            <a href="../<?php echo $tab_page; ?>" target="_blank" class="btn btn-outline-dark" style="padding: 9px 20px;"><i class="fas fa-up-right-from-square"></i> <?php echo $tab_page !== '' ? 'View ' . htmlspecialchars($groups[$active_tab]['label']) : 'View website'; ?></a>
         </div>
 
         <?php if ($message): ?>

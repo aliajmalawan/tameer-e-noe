@@ -3,10 +3,38 @@ require_once 'includes/config.php';
 require_once 'includes/settings_helper.php';
 require_once 'includes/image_helper.php';
 
-$message = '';
+$message = formFlash();   // set after a successful submission, see formDone()
 $error = '';
 
 // Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && (isset($_POST['submit_alumni']) || isset($_POST['submit_review']))) {
+    $form_problem = formGuardError();
+    if ($form_problem === '' && isset($_POST['submit_alumni'])) {
+        $form_problem = formValidate([
+            'student_name' => ['Student name', 'required'],
+            'father_name' => ['Father name', 'required'],
+            'course' => ['Course passed', 'required'],
+            'passing_year' => ['passing year', 'required', 'year'],
+            'mobile_number' => ['mobile number', 'required', 'phone'],
+            'whatsapp_number' => ['WhatsApp number', 'phone'],
+            'review' => ['Your review / feedback', 'required'],
+        ]);
+    } elseif ($form_problem === '') {
+        $form_problem = formValidate([
+            'name' => ['Your name', 'required'],
+            'passing_year' => ['passing year', 'year'],
+            'review' => ['Your review', 'required'],
+        ]);
+        if ($form_problem === '' && (intval($_POST['rating'] ?? 0) < 1 || intval($_POST['rating'] ?? 0) > 5)) {
+            $form_problem = 'Please choose a rating from 1 to 5 stars.';
+        }
+    }
+    if ($form_problem !== '') {
+        $error = $form_problem;
+        unset($_POST['submit_alumni'], $_POST['submit_review']);   // nothing below runs
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_alumni'])) {
     $student_name = mysqli_real_escape_string($conn, $_POST['student_name']);
     $father_name = mysqli_real_escape_string($conn, $_POST['father_name']);
@@ -36,9 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_alumni'])) {
     if ($upload_error !== '') {
         $error = $upload_error;
     } elseif (mysqli_query($conn, $sql)) {
-        $message = 'Thank you! Your alumni registration has been submitted and is pending approval.';
+        $form_sent = true;
+        formDone('Thank you! Your alumni registration has been submitted and is pending approval.');
     } else {
-        $error = 'Error: ' . mysqli_error($conn);
+        error_log('Alumni form save failed: ' . mysqli_error($conn));
+        $error = 'Sorry, your submission could not be saved. Please try again later.';
     }
 }
 
@@ -52,9 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review'])) {
     $sql = "INSERT INTO alumni_reviews (name, passing_year, review, rating) VALUES ('$name', $passing_year, '$review', $rating)";
 
     if (mysqli_query($conn, $sql)) {
-        $message = 'Thank you for your review! It will be displayed after approval.';
+        $form_sent = true;
+        formDone('Thank you for your review! It will be displayed after approval.');
     } else {
-        $error = 'Error: ' . mysqli_error($conn);
+        error_log('Alumni form save failed: ' . mysqli_error($conn));
+        $error = 'Sorry, your submission could not be saved. Please try again later.';
     }
 }
 
@@ -74,8 +106,8 @@ $meta_description = content('seo_alumni_description');
 
     <?php if ($message): ?>
         <div class="container" style="margin-top: 30px;">
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <?php echo $message; ?>
+            <div class="alert alert-success" role="status">
+                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($message); ?>
             </div>
         </div>
     <?php endif; ?>
@@ -92,8 +124,8 @@ $meta_description = content('seo_alumni_description');
     <section>
         <div class="container">
             <div class="section-header reveal">
-                <span class="eyebrow">Success Stories</span>
-                <h2>Our Alumni</h2>
+                <span class="eyebrow"><?php echo htmlspecialchars(content('alumni_list_eyebrow')); ?></span>
+                <h2><?php echo htmlspecialchars(content('alumni_list_heading')); ?></h2>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 30px;">
                 <?php
@@ -125,8 +157,8 @@ $meta_description = content('seo_alumni_description');
     <section class="bg-light">
         <div class="container">
             <div class="section-header reveal">
-                <span class="eyebrow">Testimonials</span>
-                <h2>Alumni Reviews</h2>
+                <span class="eyebrow"><?php echo htmlspecialchars(content('alumni_reviews_eyebrow')); ?></span>
+                <h2><?php echo htmlspecialchars(content('alumni_reviews_heading')); ?></h2>
             </div>
             <?php if ($reviews && mysqli_num_rows($reviews) > 0): ?>
             <div class="testimonial-carousel reveal">
@@ -167,55 +199,56 @@ $meta_description = content('seo_alumni_description');
         <div class="container">
             <div class="card" style="max-width: 800px; margin: 0 auto;">
                 <div class="text-center mb-30">
-                    <span class="eyebrow">Get Involved</span>
-                    <h2 style="color: var(--ink);">Alumni Registration Form</h2>
+                    <span class="eyebrow"><?php echo htmlspecialchars(content('alumni_form_eyebrow')); ?></span>
+                    <h2 style="color: var(--ink);"><?php echo htmlspecialchars(content('alumni_form_heading')); ?></h2>
                 </div>
                 <form method="POST" enctype="multipart/form-data">
+                    <?php echo formGuardFields(); ?>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Student Name *</label>
-                            <input type="text" name="student_name" required style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="student_name" required style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('student_name'); ?>">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Father Name *</label>
-                            <input type="text" name="father_name" required style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="father_name" required style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('father_name'); ?>">
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Course Passed *</label>
-                            <input type="text" name="course" required placeholder="e.g., Matric, Intermediate" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="course" required placeholder="e.g., Matric, Intermediate" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('course'); ?>">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Passing Year *</label>
-                            <input type="number" name="passing_year" required min="1990" max="2030" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="number" name="passing_year" required min="1990" max="2030" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('passing_year'); ?>">
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Current Job</label>
-                            <input type="text" name="current_job" placeholder="Job title" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="current_job" placeholder="Job title" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('current_job'); ?>">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Department</label>
-                            <input type="text" name="job_department" placeholder="Department" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="job_department" placeholder="Department" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('job_department'); ?>">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">City</label>
-                            <input type="text" name="job_city" placeholder="City" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="job_city" placeholder="City" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('job_city'); ?>">
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Mobile Number *</label>
-                            <input type="text" name="mobile_number" required placeholder="03001234567" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="mobile_number" required placeholder="03001234567" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('mobile_number'); ?>">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">WhatsApp Number</label>
-                            <input type="text" name="whatsapp_number" placeholder="03001234567" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <input type="text" name="whatsapp_number" placeholder="03001234567" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('whatsapp_number'); ?>">
                         </div>
                     </div>
 
@@ -226,7 +259,7 @@ $meta_description = content('seo_alumni_description');
 
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Your Review/Feedback * (Compulsory)</label>
-                        <textarea name="review" required rows="5" placeholder="Share your experience with Tameer-e-Nau Public School..." style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);"></textarea>
+                        <textarea name="review" required rows="5" placeholder="Share your experience with Tameer-e-Nau Public School..." style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);"><?php echo old('review'); ?></textarea>
                     </div>
 
                     <button type="submit" name="submit_alumni" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
@@ -242,34 +275,35 @@ $meta_description = content('seo_alumni_description');
         <div class="container">
             <div class="card" style="max-width: 600px; margin: 0 auto;">
                 <div class="text-center mb-30">
-                    <span class="eyebrow">Share Feedback</span>
-                    <h2 style="color: var(--ink);">Submit Your Review</h2>
+                    <span class="eyebrow"><?php echo htmlspecialchars(content('alumni_review_form_eyebrow')); ?></span>
+                    <h2 style="color: var(--ink);"><?php echo htmlspecialchars(content('alumni_review_form_heading')); ?></h2>
                 </div>
                 <form method="POST">
+                    <?php echo formGuardFields(); ?>
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Your Name *</label>
-                        <input type="text" name="name" required style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <input type="text" name="name" required style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('name'); ?>">
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Passing Year</label>
-                        <input type="number" name="passing_year" min="1990" max="2030" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <input type="number" name="passing_year" min="1990" max="2030" style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);" value="<?php echo old('passing_year'); ?>">
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Rating *</label>
                         <select name="rating" required style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);">
-                            <option value="5">★★★★★ (5 Stars)</option>
-                            <option value="4">★★★★ (4 Stars)</option>
-                            <option value="3">★★★ (3 Stars)</option>
-                            <option value="2">★★ (2 Stars)</option>
-                            <option value="1">★ (1 Star)</option>
+                            <option value="5"<?php echo old('rating') === '5' ? ' selected' : ''; ?>>★★★★★ (5 Stars)</option>
+                            <option value="4"<?php echo old('rating') === '4' ? ' selected' : ''; ?>>★★★★ (4 Stars)</option>
+                            <option value="3"<?php echo old('rating') === '3' ? ' selected' : ''; ?>>★★★ (3 Stars)</option>
+                            <option value="2"<?php echo old('rating') === '2' ? ' selected' : ''; ?>>★★ (2 Stars)</option>
+                            <option value="1"<?php echo old('rating') === '1' ? ' selected' : ''; ?>>★ (1 Star)</option>
                         </select>
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--text-dark);">Your Review *</label>
-                        <textarea name="review" required rows="4" placeholder="Share your thoughts..." style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);"></textarea>
+                        <textarea name="review" required rows="4" placeholder="Share your thoughts..." style="width: 100%; padding: 13px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm);"><?php echo old('review'); ?></textarea>
                     </div>
 
                     <button type="submit" name="submit_review" class="btn btn-primary" style="width: 100%; padding: 15px;">

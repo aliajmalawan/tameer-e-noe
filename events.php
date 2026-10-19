@@ -12,9 +12,9 @@ $meta_description = content('seo_events_description');
 <section class="bg-light">
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">Calendar</span>
-            <h2>Upcoming Events</h2>
-            <p>Mark your calendar for these exciting events</p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('events_upcoming_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('events_upcoming_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('events_upcoming_subtitle')); ?></p>
         </div>
 
         <div class="card-grid">
@@ -58,9 +58,9 @@ $meta_description = content('seo_events_description');
 <section>
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">Newsroom</span>
-            <h2>Latest News & Announcements</h2>
-            <p>Recent updates from <?php echo getSiteName(); ?></p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('events_news_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('events_news_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('events_news_subtitle')); ?></p>
         </div>
 
         <div style="max-width: 900px; margin: 0 auto;">
@@ -122,8 +122,8 @@ $meta_description = content('seo_events_description');
 <section>
     <div class="container">
         <div class="cta-banner reveal">
-            <h2>Stay Connected!</h2>
-            <p>Follow us on social media to never miss an update</p>
+            <h2><?php echo htmlspecialchars(content('events_cta_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('events_cta_text')); ?></p>
             <div class="social-links" style="justify-content: center;">
                 <?php $social = getSocialMedia(); ?>
                 <?php if (!empty($social['facebook'])): ?>

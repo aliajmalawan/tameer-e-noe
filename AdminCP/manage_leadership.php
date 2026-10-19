@@ -1,6 +1,6 @@
 <?php
-session_start();
 require_once '../includes/config.php';
+require_once __DIR__ . '/includes/admin_guard.php';   // login check, idle timeout, CSRF protection
 require_once '../includes/image_helper.php';
 
 // Check if user is logged in
@@ -137,6 +137,22 @@ if (isset($_POST['edit_leader'])) {
         }
     }
 
+    // "Remove photo" / "Remove signature" ticked (and no new file chosen): delete the file, clear the field.
+    // The website then shows the default icon instead of a photo.
+    $removed = [];
+    foreach (['photo' => 'photo_path', 'signature' => 'signature_path'] as $field => $var) {
+        $new_file_chosen = isset($_FILES[$field]) && $_FILES[$field]['error'] == 0;
+        if (!empty($_POST['remove_' . $field]) && !$new_file_chosen && $$var !== '') {
+            if (strpos($$var, '..') === false && is_file('../' . $$var)) {
+                unlink('../' . $$var);
+            }
+            $$var = '';
+            $removed[] = $field;
+        }
+    }
+    $photo_path = mysqli_real_escape_string($conn, $photo_path);
+    $signature_path = mysqli_real_escape_string($conn, $signature_path);
+
     $query = "UPDATE leadership SET
               name = '$name',
               designation = '$designation',
@@ -149,9 +165,11 @@ if (isset($_POST['edit_leader'])) {
               WHERE id = $id";
 
     if (mysqli_query($conn, $query)) {
-        $success_message = "Leadership entry updated successfully!" . ($photo_savings ? " Photo compressed{$photo_savings}." : "");
+        $success_message = "Leadership entry updated successfully!" . ($photo_savings ? " Photo compressed{$photo_savings}." : "")
+            . ($removed ? ' Removed: ' . implode(' and ', $removed) . '.' : '');
     } else {
-        $error_message = "Error updating leadership entry: " . mysqli_error($conn);
+        error_log('Leadership update failed: ' . mysqli_error($conn));
+        $error_message = "Error updating leadership entry. Please try again.";
     }
 }
 
@@ -625,6 +643,9 @@ $leaders_result = mysqli_query($conn, $leaders_query);
                     <small style="color: var(--primary-color); font-size: 12px; display: block; margin-top: 6px;"><i class="fas fa-compress-alt"></i> Photo is automatically compressed on upload.</small>
                     <small style="color: #666;">Max size: 5MB. Recommended: 500x500 pixels</small>
                     <img id="edit_photo_preview" class="preview-img">
+                    <label class="remove-image" id="remove_photo_wrap">
+                        <input type="checkbox" name="remove_photo" id="remove_photo" value="1"> <i class="fas fa-trash-alt"></i> Remove this photo (the website shows a default icon instead)
+                    </label>
                 </div>
 
                 <div class="form-group">
@@ -632,6 +653,9 @@ $leaders_result = mysqli_query($conn, $leaders_query);
                     <input type="file" name="signature" accept="image/*" onchange="previewImage(this, 'edit_signature_preview')">
                     <small style="color: #666;">Max size: 2MB. PNG with transparent background recommended</small>
                     <img id="edit_signature_preview" class="preview-img">
+                    <label class="remove-image" id="remove_signature_wrap">
+                        <input type="checkbox" name="remove_signature" id="remove_signature" value="1"> <i class="fas fa-trash-alt"></i> Remove this signature
+                    </label>
                 </div>
 
                 <div class="form-group">
@@ -699,6 +723,13 @@ $leaders_result = mysqli_query($conn, $leaders_query);
             } else {
                 signaturePreview.style.display = 'none';
             }
+
+            // "Remove" options only when there is something to remove; always start unticked
+            ['photo', 'signature'].forEach(function (field) {
+                document.getElementById('remove_' + field + '_wrap').style.display = leader[field] ? 'flex' : 'none';
+                document.getElementById('remove_' + field).checked = false;
+                document.getElementById('edit_' + field + '_preview').style.opacity = '1';
+            });
 
             document.getElementById('editModal').classList.add('active');
         }

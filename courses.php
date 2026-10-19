@@ -35,7 +35,7 @@ function renderCourseCard($course, $wide = false) {
     if (!empty($course['description'])) {
         echo '<p class="course-desc">' . htmlspecialchars($course['description']) . '</p>';
     }
-    echo '<a href="admission.php?course=' . intval($course['id']) . '" class="course-apply">' . htmlspecialchars(content('courses_card_btn')) . ' <i class="fas fa-arrow-right"></i></a>';
+    echo '<a href="admission?course=' . intval($course['id']) . '" class="course-apply">' . htmlspecialchars(content('courses_card_btn')) . ' <i class="fas fa-arrow-right"></i></a>';
     echo '</div>';
     if (!empty($subjects)) {
         echo '<div class="course-side"><h4>Subjects</h4><ul class="course-subjects">';
@@ -101,6 +101,7 @@ function renderCourseCard($course, $wide = false) {
 <!-- Extra courses added in the admin panel without a stage -->
 <section class="stage-section">
     <div class="container">
+        <h2 class="sr-only">Programmes</h2>
         <div class="course-list is-multi">
             <?php foreach ($unplaced as $course) { renderCourseCard($course); } ?>
         </div>
@@ -153,8 +154,8 @@ function renderCourseCard($course, $wide = false) {
             <h2><?php echo htmlspecialchars(content('courses_cta_heading')); ?></h2>
             <p><?php echo htmlspecialchars(content('courses_cta_text')); ?></p>
             <div class="btn-group" style="justify-content: center;">
-                <a href="admission.php" class="btn btn-secondary">Apply Now</a>
-                <a href="contact.php" class="btn btn-outline">Have Questions?</a>
+                <a href="admission" class="btn btn-secondary">Apply Now</a>
+                <a href="contact" class="btn btn-outline">Have Questions?</a>
             </div>
         </div>
     </div>

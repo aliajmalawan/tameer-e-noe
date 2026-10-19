@@ -17,7 +17,11 @@ while ($gallery_result && ($row = mysqli_fetch_assoc($gallery_result))) {
 
 // Videos are optional: the table only exists once database/upgrade-gallery-videos.sql has been run
 $videos = [];
-$videos_result = @mysqli_query($conn, "SELECT * FROM gallery_videos WHERE status = 'active' ORDER BY display_order ASC, id DESC");
+try {
+    $videos_result = mysqli_query($conn, "SELECT * FROM gallery_videos WHERE status = 'active' ORDER BY display_order ASC, id DESC");
+} catch (mysqli_sql_exception $e) {
+    $videos_result = false;   // upgrade script not run yet: show the photos without a Videos section
+}
 while ($videos_result && ($row = mysqli_fetch_assoc($videos_result))) {
     $videos[] = $row;
 }
@@ -74,9 +78,9 @@ $photo_counts = array_count_values(array_column($photos, 'category'));
 <section id="videos">
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">Watch</span>
-            <h2>School Videos</h2>
-            <p>Events, activities and celebrations at <?php echo htmlspecialchars(getSiteName()); ?></p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('gallery_videos_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('gallery_videos_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('gallery_videos_subtitle')); ?></p>
         </div>
         <div class="video-grid">
             <?php foreach ($videos as $video): $vid = htmlspecialchars($video['youtube_id']); ?>

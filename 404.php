@@ -15,8 +15,8 @@ http_response_code(404);
                 Double-check the address, or use the links below to get back on track.
             </p>
             <div class="btn-group" style="justify-content: center;">
-                <a href="index.php" class="btn btn-primary">Back to Home</a>
-                <a href="contact.php" class="btn btn-outline-dark">Contact Us</a>
+                <a href="./" class="btn btn-primary">Back to Home</a>
+                <a href="contact" class="btn btn-outline-dark">Contact Us</a>
             </div>
         </div>
     </div>

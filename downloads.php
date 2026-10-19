@@ -46,7 +46,7 @@ $meta_description = content('seo_downloads_description');
                                     echo '<td data-label="Description" style="padding: 15px; color: var(--text-dark);">' . htmlspecialchars($download['description']) . '</td>';
                                     echo '<td data-label="File Type" style="padding: 15px;"><i class="fas ' . $icon . '" style="color: var(--primary-color); margin-right: 8px;"></i><span style="font-weight: 500;">' . strtoupper($file_ext) . ' File</span></td>';
                                     echo '<td class="download-action" style="padding: 15px; text-align: center;">';
-                                    echo '<a href="' . $download['file_path'] . '" download class="btn btn-primary" style="padding: 10px 22px; font-size: 14px;"><i class="fas fa-download"></i> Download</a>';
+                                    echo '<a href="' . htmlspecialchars($download['file_path']) . '" download class="btn btn-primary" style="padding: 10px 22px; font-size: 14px;"><i class="fas fa-download"></i> Download</a>';
                                     echo '</td>';
                                     echo '</tr>';
                                 }

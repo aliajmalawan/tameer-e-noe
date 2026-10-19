@@ -25,3 +25,11 @@
         backdrop.addEventListener('click', closeSidebar);
     });
 })();
+
+// Ticking "Remove this photo" fades the preview so it's clear the image will go
+document.addEventListener('change', function (e) {
+    if (!e.target.matches('.remove-image input[type="checkbox"]')) return;
+    var group = e.target.closest('.form-group');
+    var preview = group && group.querySelector('img');
+    if (preview) preview.style.opacity = e.target.checked ? '0.3' : '1';
+});

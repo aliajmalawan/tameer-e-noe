@@ -1,6 +1,6 @@
 <?php
-session_start();
 require_once '../includes/config.php';
+require_once __DIR__ . '/includes/admin_guard.php';   // login check, idle timeout, CSRF protection
 
 if (!isset($_SESSION['admin_logged_in'])) {
     header('Location: login.php');
@@ -55,7 +55,11 @@ if (isset($_GET['edit'])) {
     $edit_video = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 }
 
-$videos = mysqli_query($conn, "SELECT * FROM gallery_videos ORDER BY display_order ASC, id DESC");
+try {
+    $videos = mysqli_query($conn, "SELECT * FROM gallery_videos ORDER BY display_order ASC, id DESC");
+} catch (mysqli_sql_exception $e) {
+    $videos = false;   // table missing: the page explains how to create it
+}
 $table_missing = $videos === false;
 ?>
 <!DOCTYPE html>

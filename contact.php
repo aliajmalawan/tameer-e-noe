@@ -3,16 +3,28 @@ require_once 'includes/config.php';
 $page_title = content('seo_contact_title');
 $meta_description = content('seo_contact_description');
 
-$success_message = '';
+$success_message = formFlash();   // set after a successful submission, see formDone()
 $error_message = '';
 
 // Handle contact form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = mysqli_real_escape_string($conn, $_POST['name']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $subject = mysqli_real_escape_string($conn, $_POST['subject']);
-    $message = mysqli_real_escape_string($conn, $_POST['message']);
+// The same checks the browser makes, repeated here because bots post without a browser
+$contact_post_ok = function () {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $message = trim($_POST['message'] ?? '');
+    return $name !== '' && $message !== '' && filter_var($email, FILTER_VALIDATE_EMAIL);
+};
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && ($guard_problem = formGuardError()) !== '') {
+    $error_message = $guard_problem;
+} elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && !$contact_post_ok()) {
+    $error_message = "Please fill in your name, a valid email address and your message.";
+} elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $name = mysqli_real_escape_string($conn, trim($_POST['name']));
+    $email = mysqli_real_escape_string($conn, trim($_POST['email']));
+    $phone = mysqli_real_escape_string($conn, trim($_POST['phone'] ?? ''));
+    $subject = mysqli_real_escape_string($conn, trim($_POST['subject'] ?? ''));
+    $message = mysqli_real_escape_string($conn, trim($_POST['message']));
 
     $insert_query = "INSERT INTO contacts (name, email, phone, subject, message, status, created_at)
                      VALUES ('$name', '$email', '$phone', '$subject', '$message', 'unread', NOW())";
@@ -48,7 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             . '<p style="margin:18px 0 0;font-size:12.5px;color:' . EMAIL_MUTED . ';">This is an automatic confirmation; replies go to the school office.</p>');
         mail($f_email, 'Thank You for Contacting ' . getSiteName(), $message_sender, emailHeaders(hasSiteEmail() ? getSiteEmail() : ''));
 
-        $success_message = "Thank you for contacting us! A confirmation email has been sent to your email address. We will get back to you soon.";
+        $form_sent = true;
+
+        formDone("Thank you for contacting us! A confirmation email has been sent to your email address. We will get back to you soon.", 'form-status');
     } else {
         $error_message = "Error sending message. Please try again.";
     }
@@ -62,13 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <!-- Contact Info Cards -->
 <section class="bg-light">
     <div class="container">
+        <h2 class="sr-only">Contact details</h2>
         <div class="card-grid">
             <div class="card" style="text-align: center;">
                 <div class="card-icon" style="margin: 0 auto 20px;">
                     <i class="fas fa-map-marker-alt"></i>
                 </div>
                 <h3>Visit Us</h3>
-                <p>Tameer-e-Nau Public School<br>Canal View, Hasilpur<br>Pakistan</p>
+                <p><?php echo htmlspecialchars(getSiteName()); ?><br><?php echo nl2br(htmlspecialchars(getSiteAddress())); ?></p>
             </div>
 
             <div class="card" style="text-align: center;">
@@ -98,13 +113,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="grid-2 reveal" style="align-items: start;">
             <!-- Contact Form -->
             <div>
-                <span class="eyebrow">Contact Form</span>
-                <h2 style="color: var(--ink); margin-bottom: 20px;">Send us a Message</h2>
+                <span class="eyebrow"><?php echo htmlspecialchars(content('contact_form_eyebrow')); ?></span>
+                <h2 style="color: var(--ink); margin-bottom: 20px;"><?php echo htmlspecialchars(content('contact_form_heading')); ?></h2>
 
                 <?php if ($success_message): ?>
-                    <div class="alert alert-success">
+                    <div class="alert alert-success" id="form-status" role="status">
                         <i class="fas fa-check-circle"></i>
-                        <span><?php echo $success_message; ?></span>
+                        <span><?php echo htmlspecialchars($success_message); ?></span>
                     </div>
                 <?php endif; ?>
 
@@ -116,42 +131,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?php endif; ?>
 
                 <form method="POST" id="contactForm" onsubmit="return validateForm('contactForm')">
+                    <?php echo formGuardFields(); ?>
                     <div class="grid-2" style="gap: 20px; align-items: start;">
                         <div class="form-group">
                             <label for="name">Your Name *</label>
-                            <input type="text" id="name" name="name" required placeholder="Enter your name">
+                            <input type="text" id="name" name="name" required placeholder="Enter your name" value="<?php echo old('name'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="email">Email Address *</label>
-                            <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+                            <input type="email" id="email" name="email" required placeholder="your.email@example.com" value="<?php echo old('email'); ?>">
                         </div>
                     </div>
 
                     <div class="grid-2" style="gap: 20px; align-items: start;">
                         <div class="form-group">
                             <label for="phone">Phone Number *</label>
-                            <input type="tel" id="phone" name="phone" required placeholder="03001234567">
+                            <input type="tel" id="phone" name="phone" required placeholder="03001234567" value="<?php echo old('phone'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="subject">Subject *</label>
                             <select id="subject" name="subject" required>
                                 <option value="">-- Select Subject --</option>
-                                <option value="Admission Inquiry">Admission Inquiry</option>
-                                <option value="Course Information">Course Information</option>
-                                <option value="Fee Inquiry">Fee Inquiry</option>
-                                <option value="General Question">General Question</option>
-                                <option value="Feedback">Feedback</option>
-                                <option value="Complaint">Complaint</option>
-                                <option value="Other">Other</option>
+                                <option value="Admission Inquiry"<?php echo old('subject') === 'Admission Inquiry' ? ' selected' : ''; ?>>Admission Inquiry</option>
+                                <option value="Course Information"<?php echo old('subject') === 'Course Information' ? ' selected' : ''; ?>>Course Information</option>
+                                <option value="Fee Inquiry"<?php echo old('subject') === 'Fee Inquiry' ? ' selected' : ''; ?>>Fee Inquiry</option>
+                                <option value="General Question"<?php echo old('subject') === 'General Question' ? ' selected' : ''; ?>>General Question</option>
+                                <option value="Feedback"<?php echo old('subject') === 'Feedback' ? ' selected' : ''; ?>>Feedback</option>
+                                <option value="Complaint"<?php echo old('subject') === 'Complaint' ? ' selected' : ''; ?>>Complaint</option>
+                                <option value="Other"<?php echo old('subject') === 'Other' ? ' selected' : ''; ?>>Other</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="message">Your Message *</label>
-                        <textarea id="message" name="message" required placeholder="Write your message here..."></textarea>
+                        <textarea id="message" name="message" required placeholder="Write your message here..."><?php echo old('message'); ?></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width: 100%;">
@@ -162,8 +178,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <!-- Google Map & Additional Info -->
             <div>
-                <span class="eyebrow">Our Location</span>
-                <h2 style="color: var(--ink); margin-bottom: 20px;">Find Us Here</h2>
+                <span class="eyebrow"><?php echo htmlspecialchars(content('contact_map_eyebrow')); ?></span>
+                <h2 style="color: var(--ink); margin-bottom: 20px;"><?php echo htmlspecialchars(content('contact_map_heading')); ?></h2>
 
                 <!-- Google Map -->
                 <div style="border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 30px; height: 400px; border: 2px solid var(--border-color); box-shadow: var(--shadow-sm);">
@@ -173,19 +189,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <!-- Working Hours -->
                 <div class="card">
                     <h3 style="color: var(--primary-color); margin-bottom: 20px;"><i class="fas fa-clock"></i> Working Hours</h3>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="padding: 10px 0; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 15px;">
-                            <span style="display: flex; align-items: center; gap: 10px; font-weight: 600;"><i class="fas fa-calendar-day" style="color: var(--primary-color); width: 18px; text-align: center;"></i> Monday - Friday</span>
-                            <span>8:00 AM - 5:00 PM</span>
+                    <ul class="hours-list">
+                        <?php
+                        // One "Day | Time" per line, edited under Page Content > Contact page
+                        foreach (array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', content('contact_hours')))) as $hours_line):
+                            [$hours_day, $hours_time] = array_pad(array_map('trim', explode('|', $hours_line, 2)), 2, '');
+                            $hours_closed = strcasecmp($hours_time, 'Closed') === 0;
+                        ?>
+                        <li>
+                            <span class="hours-day"><i class="fas <?php echo $hours_closed ? 'fa-calendar-times' : 'fa-calendar-day'; ?>"></i> <?php echo htmlspecialchars($hours_day); ?></span>
+                            <span class="<?php echo $hours_closed ? 'hours-closed' : ''; ?>"><?php echo htmlspecialchars($hours_time); ?></span>
                         </li>
-                        <li style="padding: 10px 0; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 15px;">
-                            <span style="display: flex; align-items: center; gap: 10px; font-weight: 600;"><i class="fas fa-calendar-day" style="color: var(--primary-color); width: 18px; text-align: center;"></i> Saturday</span>
-                            <span>9:00 AM - 3:00 PM</span>
-                        </li>
-                        <li style="padding: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
-                            <span style="display: flex; align-items: center; gap: 10px; font-weight: 600;"><i class="fas fa-calendar-times" style="color: #dc3545; width: 18px; text-align: center;"></i> Sunday</span>
-                            <span style="color: var(--accent); font-weight: 600;">Closed</span>
-                        </li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
             </div>
@@ -197,9 +212,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <section class="bg-light">
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">FAQs</span>
-            <h2>Frequently Asked Questions</h2>
-            <p>Quick answers to common questions</p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('contact_faq_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('contact_faq_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('contact_faq_subtitle')); ?></p>
         </div>
 
         <div class="faq-list">

@@ -4,11 +4,36 @@ require_once 'includes/image_helper.php';
 $page_title = content('seo_admission_title');
 $meta_description = content('seo_admission_description');
 
-$success_message = '';
+$success_message = formFlash();   // set after a successful submission, see formDone()
 $error_message = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $error_message = formGuardError() ?: formValidate([
+        'student_name' => ['Student name', 'required'],
+        'father_name' => ['Father / guardian name', 'required'],
+        'cnic_bform' => ['CNIC / B-Form number', 'required', 'cnic'],
+        'phone' => ['phone number', 'required', 'phone'],
+        'email' => ['Email', 'email'],
+        'address' => ['Residential address', 'required'],
+        'course_id' => ['Program / course', 'required'],
+        'previous_education' => ['Previous education', 'required'],
+    ]);
+    if ($error_message === '') {
+        // The chosen program must be one of the active courses offered in the list
+        $course_check = mysqli_prepare($conn, "SELECT COUNT(*) FROM courses WHERE id = ? AND status = 'active'");
+        $posted_course = intval($_POST['course_id']);
+        mysqli_stmt_bind_param($course_check, 'i', $posted_course);
+        mysqli_stmt_execute($course_check);
+        mysqli_stmt_bind_result($course_check, $course_exists);
+        mysqli_stmt_fetch($course_check);
+        mysqli_stmt_close($course_check);
+        if (!$course_exists) {
+            $error_message = 'Please choose a program from the list.';
+        }
+    }
+}
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $error_message === '') {
     $student_name = mysqli_real_escape_string($conn, $_POST['student_name']);
     $father_name = mysqli_real_escape_string($conn, $_POST['father_name']);
     $cnic_bform = mysqli_real_escape_string($conn, $_POST['cnic_bform']);
@@ -83,7 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mail($f('email'), 'Application Received - ' . getSiteName(), $message_student, emailHeaders(hasSiteEmail() ? getSiteEmail() : ''));
         }
 
-        $success_message = "Your admission application has been submitted successfully! A confirmation email has been sent to your email address. We will contact you soon.";
+        $form_sent = true;
+
+        formDone("Your admission application has been submitted successfully! A confirmation email has been sent to your email address. We will contact you soon.", 'form-status');
     } else {
         $error_message = "Error submitting application. Please try again.";
     }
@@ -98,9 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <section class="bg-light">
     <div class="container">
         <?php if ($success_message): ?>
-            <div class="alert alert-success" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+            <div class="alert alert-success" id="form-status" role="status" style="max-width: 800px; margin-left: auto; margin-right: auto;">
                 <i class="fas fa-check-circle"></i>
-                <span><?php echo $success_message; ?></span>
+                <span><?php echo htmlspecialchars($success_message); ?></span>
             </div>
         <?php endif; ?>
 
@@ -114,50 +141,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div style="max-width: 800px; margin: 0 auto;">
             <div class="card" style="padding: 40px;">
                 <div class="text-center mb-30">
-                    <span class="eyebrow">Apply Online</span>
-                    <h2 style="color: var(--ink);">Admission Form</h2>
+                    <span class="eyebrow"><?php echo htmlspecialchars(content('adm_form_eyebrow')); ?></span>
+                    <h2 style="color: var(--ink);"><?php echo htmlspecialchars(content('adm_form_heading')); ?></h2>
                 </div>
 
-                <form method="POST" enctype="multipart/form-data" id="admissionForm" onsubmit="return validateForm('admissionForm')">
+                <form method="POST" enctype="multipart/form-data" id="admissionForm" data-guard onsubmit="return validateForm('admissionForm')">
+                    <?php echo formGuardFields(); ?>
                     <div class="grid-2" style="gap: 20px; align-items: start;">
                         <div class="form-group">
                             <label for="student_name">Student Name *</label>
-                            <input type="text" id="student_name" name="student_name" required placeholder="Enter student's full name">
+                            <input type="text" id="student_name" name="student_name" required placeholder="Enter student's full name" value="<?php echo old('student_name'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="father_name">Father/Guardian Name *</label>
-                            <input type="text" id="father_name" name="father_name" required placeholder="Enter father or guardian name">
+                            <input type="text" id="father_name" name="father_name" required placeholder="Enter father or guardian name" value="<?php echo old('father_name'); ?>">
                         </div>
                     </div>
 
                     <div class="grid-2" style="gap: 20px; align-items: start;">
                         <div class="form-group">
                             <label for="cnic_bform">CNIC / B-Form Number *</label>
-                            <input type="text" id="cnic_bform" name="cnic_bform" required placeholder="e.g., 12345-1234567-1">
+                            <input type="text" id="cnic_bform" name="cnic_bform" required placeholder="e.g., 12345-1234567-1" value="<?php echo old('cnic_bform'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="previous_education">Previous Education *</label>
-                            <input type="text" id="previous_education" name="previous_education" required placeholder="e.g., Matric from XYZ School, 85%">
+                            <input type="text" id="previous_education" name="previous_education" required placeholder="e.g., Matric from XYZ School, 85%" value="<?php echo old('previous_education'); ?>">
                         </div>
                     </div>
 
                     <div class="grid-2" style="gap: 20px; align-items: start;">
                         <div class="form-group">
                             <label for="phone">Phone Number *</label>
-                            <input type="tel" id="phone" name="phone" required placeholder="03001234567">
+                            <input type="tel" id="phone" name="phone" required placeholder="03001234567" value="<?php echo old('phone'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" placeholder="your.email@example.com">
+                            <input type="email" id="email" name="email" placeholder="your.email@example.com" value="<?php echo old('email'); ?>">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="address">Residential Address *</label>
-                        <textarea id="address" name="address" required placeholder="Enter complete address"></textarea>
+                        <textarea id="address" name="address" required placeholder="Enter complete address"><?php echo old('address'); ?></textarea>
                     </div>
 
                     <div class="form-group">
@@ -170,7 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                             if ($courses_result && mysqli_num_rows($courses_result) > 0) {
                                 while ($course = mysqli_fetch_assoc($courses_result)) {
-                                    $selected = (isset($_GET['course']) && $_GET['course'] == $course['id']) ? 'selected' : '';
+                                    $chosen_course = old('course_id') !== '' ? old('course_id') : ($_GET['course'] ?? '');
+                                    $selected = ($chosen_course !== '' && $chosen_course == $course['id']) ? 'selected' : '';
                                     echo '<option value="' . $course['id'] . '" ' . $selected . '>' . htmlspecialchars($course['name']) . '</option>';
                                 }
                             } else {
@@ -199,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     <div class="form-group">
                         <label for="message">Additional Information</label>
-                        <textarea id="message" name="message" placeholder="Any additional information you'd like to share..."></textarea>
+                        <textarea id="message" name="message" placeholder="Any additional information you'd like to share..."><?php echo old('message'); ?></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 15px;">
@@ -215,9 +244,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <section>
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">How It Works</span>
-            <h2>Admission Process</h2>
-            <p>Simple steps to join <?php echo getSiteName(); ?></p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('adm_process_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('adm_process_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('adm_process_subtitle')); ?></p>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 30px;">
@@ -236,9 +265,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <section class="bg-light">
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">Fee Structure</span>
-            <h2>Fee Information</h2>
-            <p>Transparent and affordable fee structure</p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('adm_fee_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('adm_fee_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('adm_fee_subtitle')); ?></p>
         </div>
 
         <div class="card fee-card">
@@ -259,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?php foreach ($fee_rows as $i => $row): ?>
                 <li style="display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 0; <?php echo $i < count($fee_rows) - 1 ? 'border-bottom: 1px solid var(--border-color);' : ''; ?>">
                     <span style="display: flex; align-items: center; gap: 12px; font-weight: 600;">
-                        <i class="fas <?php echo $row['icon']; ?>" style="color: var(--primary-color); width: 20px; text-align: center;"></i>
+                        <i class="fas <?php echo htmlspecialchars($row['icon']); ?>" style="color: var(--primary-color); width: 20px; text-align: center;"></i>
                         <?php echo htmlspecialchars($row['label']); ?>
                     </span>
                     <span class="fee-amount"><?php echo htmlspecialchars($row['amount']); ?></span>
@@ -278,10 +307,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <section>
     <div class="container">
         <div class="cta-banner reveal">
-            <h2>Need Help with Admission?</h2>
-            <p>Our admission team is here to assist you</p>
+            <h2><?php echo htmlspecialchars(content('adm_cta_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('adm_cta_text')); ?></p>
             <div class="btn-group" style="justify-content: center;">
-                <a href="contact.php" class="btn btn-secondary">Contact Us</a>
+                <a href="contact" class="btn btn-secondary">Contact Us</a>
                 <?php $admission_phone = trim(explode(',', getSitePhone())[0]); ?>
                 <a href="tel:<?php echo htmlspecialchars(str_replace([' ', '-'], '', $admission_phone)); ?>" class="btn btn-outline"><i class="fas fa-phone"></i> Call Now</a>
             </div>

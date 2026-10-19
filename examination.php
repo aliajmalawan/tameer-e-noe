@@ -21,8 +21,8 @@ $meta_description = content('seo_examination_description');
     <section>
         <div class="container">
             <div class="section-header reveal">
-                <span class="eyebrow">Schedule</span>
-                <h2>Exam Datesheets</h2>
+                <span class="eyebrow"><?php echo htmlspecialchars(content('exam_datesheet_eyebrow')); ?></span>
+                <h2><?php echo htmlspecialchars(content('exam_datesheet_heading')); ?></h2>
             </div>
 
             <?php
@@ -92,8 +92,8 @@ $meta_description = content('seo_examination_description');
     <section class="bg-light">
         <div class="container">
             <div class="section-header reveal">
-                <span class="eyebrow">Results</span>
-                <h2>Board Results</h2>
+                <span class="eyebrow"><?php echo htmlspecialchars(content('exam_results_eyebrow')); ?></span>
+                <h2><?php echo htmlspecialchars(content('exam_results_heading')); ?></h2>
             </div>
 
             <!-- Intermediate Results -->
@@ -104,7 +104,7 @@ $meta_description = content('seo_examination_description');
                     if ($inter_results && mysqli_num_rows($inter_results) > 0) {
                         while ($result = mysqli_fetch_assoc($inter_results)) {
                             echo '<div class="card">';
-                            echo '<img src="' . $result['image_path'] . '" alt="' . htmlspecialchars($result['title']) . '" loading="lazy" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 15px; cursor: pointer; box-shadow: var(--shadow-xs);" onclick="window.open(\'' . $result['image_path'] . '\', \'_blank\')">';
+                            echo '<img src="' . htmlspecialchars($result['image_path']) . '" alt="' . htmlspecialchars($result['title']) . '" loading="lazy" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 15px; cursor: pointer; box-shadow: var(--shadow-xs);" onclick="window.open(\'' . htmlspecialchars($result['image_path'], ENT_QUOTES) . '\', \'_blank\')">';
                             echo '<h4 style="color: var(--primary-color); margin-bottom: 10px;">' . htmlspecialchars($result['title']) . '</h4>';
                             echo '<p style="color: var(--text-light);">Year: ' . $result['year'] . '</p>';
                             echo '</div>';
@@ -124,7 +124,7 @@ $meta_description = content('seo_examination_description');
                     if ($matric_results && mysqli_num_rows($matric_results) > 0) {
                         while ($result = mysqli_fetch_assoc($matric_results)) {
                             echo '<div class="card">';
-                            echo '<img src="' . $result['image_path'] . '" alt="' . htmlspecialchars($result['title']) . '" loading="lazy" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 15px; cursor: pointer; box-shadow: var(--shadow-xs);" onclick="window.open(\'' . $result['image_path'] . '\', \'_blank\')">';
+                            echo '<img src="' . htmlspecialchars($result['image_path']) . '" alt="' . htmlspecialchars($result['title']) . '" loading="lazy" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 15px; cursor: pointer; box-shadow: var(--shadow-xs);" onclick="window.open(\'' . htmlspecialchars($result['image_path'], ENT_QUOTES) . '\', \'_blank\')">';
                             echo '<h4 style="color: var(--primary-color); margin-bottom: 10px;">' . htmlspecialchars($result['title']) . '</h4>';
                             echo '<p style="color: var(--text-light);">Year: ' . $result['year'] . '</p>';
                             echo '</div>';

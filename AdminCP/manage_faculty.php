@@ -1,6 +1,7 @@
 <?php
-session_start();
 require_once '../includes/config.php';
+require_once __DIR__ . '/includes/admin_guard.php';   // login check, idle timeout, CSRF protection
+require_once '../includes/image_helper.php';
 
 if (!isset($_SESSION['admin_logged_in'])) {
     header('Location: login.php');
@@ -8,11 +9,21 @@ if (!isset($_SESSION['admin_logged_in'])) {
 }
 
 $message = '';
+$upload_dir = '../uploads/faculty/';
 
-// Handle delete
+/** Delete a stored faculty photo file (path as saved in the database, relative to the site root). */
+function deleteFacultyPhoto($path) {
+    if ($path !== '' && $path !== null && strpos($path, '..') === false && is_file('../' . $path)) {
+        unlink('../' . $path);
+    }
+}
+
+// Handle delete (the photo file goes too)
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
+    $old = mysqli_fetch_assoc(mysqli_query($conn, "SELECT photo FROM faculty WHERE id = $id"));
     if (mysqli_query($conn, "DELETE FROM faculty WHERE id = $id")) {
+        deleteFacultyPhoto($old['photo'] ?? '');
         $message = "Faculty member deleted successfully!";
     }
 }
@@ -24,19 +35,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $subjects = mysqli_real_escape_string($conn, $_POST['subjects']);
     $qualification = mysqli_real_escape_string($conn, $_POST['qualification']);
     $experience = intval($_POST['experience']);
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
+    $status = ($_POST['status'] ?? '') === 'inactive' ? 'inactive' : 'active';
+    $id = intval($_POST['faculty_id'] ?? 0);
 
-    if (isset($_POST['faculty_id']) && !empty($_POST['faculty_id'])) {
-        // Update
-        $id = intval($_POST['faculty_id']);
-        $query = "UPDATE faculty SET name='$name', designation='$designation', subjects='$subjects', qualification='$qualification', experience=$experience, status='$status' WHERE id=$id";
+    // Current photo (when editing)
+    $current_photo = '';
+    if ($id > 0) {
+        $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT photo FROM faculty WHERE id = $id"));
+        $current_photo = (string) ($row['photo'] ?? '');
+    }
+    $photo = $current_photo;
+    $photo_note = '';
+
+    // New photo chosen: compress, save, and replace the old one
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+        if ($_FILES['photo']['size'] > 8 * 1024 * 1024) {
+            $photo_note = ' The photo was not saved: it is larger than 8 MB.';
+        } else {
+            $saved = compressUploadedPhotoAsJpeg($_FILES['photo']['tmp_name'], $upload_dir, 'teacher_' . time() . '_' . substr(uniqid(), -6), 800, 85);
+            if ($saved) {
+                deleteFacultyPhoto($current_photo);
+                $photo = 'uploads/faculty/' . $saved;
+                $photo_note = ' Photo updated.';
+            } else {
+                $photo_note = ' The photo was not saved: please use a JPG, PNG or WebP image.';
+            }
+        }
+    } elseif (!empty($_POST['remove_photo']) && $current_photo !== '') {
+        // "Remove this photo" ticked: the website shows the default icon instead
+        deleteFacultyPhoto($current_photo);
+        $photo = '';
+        $photo_note = ' Photo removed.';
+    }
+    $photo_sql = mysqli_real_escape_string($conn, $photo);
+
+    if ($id > 0) {
+        $query = "UPDATE faculty SET name='$name', designation='$designation', subjects='$subjects', qualification='$qualification', experience=$experience, photo='$photo_sql', status='$status' WHERE id=$id";
     } else {
-        // Insert
-        $query = "INSERT INTO faculty (name, designation, subjects, qualification, experience, status) VALUES ('$name', '$designation', '$subjects', '$qualification', $experience, '$status')";
+        $query = "INSERT INTO faculty (name, designation, subjects, qualification, experience, photo, status) VALUES ('$name', '$designation', '$subjects', '$qualification', $experience, '$photo_sql', '$status')";
     }
 
     if (mysqli_query($conn, $query)) {
-        $message = "Faculty member saved successfully!";
+        $message = "Faculty member saved successfully!" . $photo_note;
     } else {
         $message = "Error saving faculty member.";
     }
@@ -88,7 +128,7 @@ $faculty = mysqli_query($conn, "SELECT * FROM faculty ORDER BY id DESC");
         <!-- Add/Edit Form -->
         <div class="card" style="margin-bottom: 30px;">
             <h2 style="color: var(--primary-color); margin-bottom: 20px;"><?php echo $edit_faculty ? 'Edit Faculty Member' : 'Add New Faculty Member'; ?></h2>
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <?php if ($edit_faculty): ?>
                     <input type="hidden" name="faculty_id" value="<?php echo $edit_faculty['id']; ?>">
                 <?php endif; ?>
@@ -130,6 +170,20 @@ $faculty = mysqli_query($conn, "SELECT * FROM faculty ORDER BY id DESC");
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="faculty_photo">Photo <?php echo ($edit_faculty && !empty($edit_faculty['photo'])) ? '(choose a new file to replace it)' : '(optional)'; ?></label>
+                    <?php if ($edit_faculty && !empty($edit_faculty['photo'])): ?>
+                        <img src="../<?php echo htmlspecialchars($edit_faculty['photo']); ?>" alt="Current photo" class="faculty-photo-preview">
+                    <?php endif; ?>
+                    <input type="file" id="faculty_photo" name="photo" accept="image/jpeg,image/png,image/webp">
+                    <small style="color: var(--text-light); display: block; margin-top: 6px;">JPG, PNG or WebP, up to 8 MB. A square photo with the face in the middle looks best; it is compressed automatically.</small>
+                    <?php if ($edit_faculty && !empty($edit_faculty['photo'])): ?>
+                        <label class="remove-image">
+                            <input type="checkbox" name="remove_photo" value="1"> <i class="fas fa-trash-alt"></i> Remove this photo (the website shows a default icon instead)
+                        </label>
+                    <?php endif; ?>
+                </div>
+
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> <?php echo $edit_faculty ? 'Update Faculty' : 'Add Faculty'; ?>
                 </button>
@@ -145,7 +199,7 @@ $faculty = mysqli_query($conn, "SELECT * FROM faculty ORDER BY id DESC");
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: var(--primary-color); color: white;">
-                        <th style="padding: 15px; text-align: left;">ID</th>
+                        <th style="padding: 15px; text-align: left;">Photo</th>
                         <th style="padding: 15px; text-align: left;">Name</th>
                         <th style="padding: 15px; text-align: left;">Designation</th>
                         <th style="padding: 15px; text-align: left;">Subjects</th>
@@ -160,7 +214,9 @@ $faculty = mysqli_query($conn, "SELECT * FROM faculty ORDER BY id DESC");
                     if ($faculty && mysqli_num_rows($faculty) > 0) {
                         while ($member = mysqli_fetch_assoc($faculty)) {
                             echo '<tr style="border-bottom: 1px solid #e0e0e0;">';
-                            echo '<td style="padding: 15px;">#' . $member['id'] . '</td>';
+                            echo '<td style="padding: 10px 15px;">' . (!empty($member['photo'])
+                                ? '<img src="../' . htmlspecialchars($member['photo']) . '" alt="" class="faculty-photo-thumb">'
+                                : '<span class="faculty-photo-thumb is-empty"><i class="fas fa-user"></i></span>') . '</td>';
                             echo '<td style="padding: 15px;"><strong>' . htmlspecialchars($member['name']) . '</strong></td>';
                             echo '<td style="padding: 15px;">' . htmlspecialchars($member['designation']) . '</td>';
                             echo '<td style="padding: 15px;">' . htmlspecialchars($member['subjects']) . '</td>';

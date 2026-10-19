@@ -3,7 +3,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section footer-brand">
-                    <a href="index.php" class="footer-logo">
+                    <a href="./" class="footer-logo">
                         <img src="<?php echo getLogoSmallPath(); ?>" alt="<?php echo htmlspecialchars(getSiteName()); ?> Logo" width="64" height="64" onerror="this.style.display='none'">
                         <span>
                             <strong><?php echo htmlspecialchars(getSiteName()); ?></strong>
@@ -32,30 +32,30 @@
                 </div>
 
                 <div class="footer-section">
-                    <h3>Quick Links</h3>
+                    <h2 class="footer-heading">Quick Links</h2>
                     <ul>
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="about.php">About Us</a></li>
-                        <li><a href="courses.php">Academics</a></li>
-                        <li><a href="admission.php">Admissions</a></li>
-                        <li><a href="gallery.php">Campus Life</a></li>
-                        <li><a href="contact.php">Contact Us</a></li>
+                        <li><a href="./">Home</a></li>
+                        <li><a href="about">About Us</a></li>
+                        <li><a href="courses">Academics</a></li>
+                        <li><a href="admission">Admissions</a></li>
+                        <li><a href="gallery">Campus Life</a></li>
+                        <li><a href="contact">Contact Us</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-section">
-                    <h3>Explore</h3>
+                    <h2 class="footer-heading">Explore</h2>
                     <ul>
-                        <li><a href="faculty.php">Our Faculty</a></li>
-                        <li><a href="events.php">News &amp; Events</a></li>
-                        <li><a href="examination.php">Examination</a></li>
-                        <li><a href="downloads.php">Downloads</a></li>
-                        <li><a href="alumni.php">Alumni</a></li>
+                        <li><a href="faculty">Our Faculty</a></li>
+                        <li><a href="events">News &amp; Events</a></li>
+                        <li><a href="examination">Examination</a></li>
+                        <li><a href="downloads">Downloads</a></li>
+                        <li><a href="alumni">Alumni</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-section">
-                    <h3>Contact Info</h3>
+                    <h2 class="footer-heading">Contact Info</h2>
                     <p><i class="fas fa-map-marker-alt"></i> <span><?php echo nl2br(htmlspecialchars(getSiteAddress())); ?></span></p>
                     <?php foreach (array_filter(array_map('trim', explode(',', getSitePhone()))) as $number): ?>
                         <p><i class="fas fa-phone"></i> <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $number)); ?>"><?php echo htmlspecialchars($number); ?></a></p>

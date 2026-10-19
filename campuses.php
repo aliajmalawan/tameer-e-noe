@@ -89,11 +89,11 @@ if ($campuses_result) {
 <section>
     <div class="container">
         <div class="cta-banner reveal">
-            <h2>Want to Learn More?</h2>
-            <p>Get in touch with us for admissions and details about any of our campuses</p>
+            <h2><?php echo htmlspecialchars(content('campuses_cta_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('campuses_cta_text')); ?></p>
             <div class="btn-group" style="justify-content: center;">
-                <a href="contact.php" class="btn btn-secondary">Contact Us</a>
-                <a href="admission.php" class="btn btn-outline">Apply Now</a>
+                <a href="contact" class="btn btn-secondary">Contact Us</a>
+                <a href="admission" class="btn btn-outline">Apply Now</a>
             </div>
         </div>
     </div>

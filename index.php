@@ -184,7 +184,7 @@ foreach (getFeatureCards('core_values') as $value_card) {
                 </div>
                 <?php endif; ?>
 
-                <a href="about.php" class="btn btn-primary"><?php echo htmlspecialchars(content('home_about_btn_label')); ?> <i class="fas fa-arrow-right"></i></a>
+                <a href="about" class="btn btn-primary"><?php echo htmlspecialchars(content('home_about_btn_label')); ?> <i class="fas fa-arrow-right"></i></a>
             </div>
         </div>
     </div>
@@ -244,7 +244,7 @@ foreach ([1 => 'fa-seedling', 2 => 'fa-book-reader', 3 => 'fa-lightbulb', 4 => '
                 </div>
                 <h3><?php echo htmlspecialchars($level['title']); ?></h3>
                 <p><?php echo htmlspecialchars($level['desc']); ?></p>
-                <a href="courses.php" class="level-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                <a href="courses" class="level-link">Learn More <i class="fas fa-arrow-right"></i></a>
             </div>
             <?php endforeach; ?>
         </div>
@@ -305,7 +305,7 @@ foreach ([1 => 'fa-seedling', 2 => 'fa-book-reader', 3 => 'fa-lightbulb', 4 => '
                 <h2><?php echo htmlspecialchars(content('home_assessment_heading')); ?></h2>
                 <p><?php echo nl2br(htmlspecialchars(content('assessment_paragraph_1'))); ?></p>
                 <p><?php echo nl2br(htmlspecialchars(content('assessment_paragraph_2'))); ?></p>
-                <a href="about.php" class="btn btn-primary">Learn More</a>
+                <a href="about" class="btn btn-primary">Learn More</a>
             </div>
             <div class="assessment-panel">
                 <?php
@@ -352,7 +352,7 @@ foreach ([1 => 'fa-seedling', 2 => 'fa-book-reader', 3 => 'fa-lightbulb', 4 => '
                 <div class="feature-row reveal">
                     <div class="feature-icon"><i class="<?php echo htmlspecialchars($f['icon']); ?>"></i></div>
                     <div>
-                        <h4><?php echo htmlspecialchars($f['title']); ?></h4>
+                        <h3><?php echo htmlspecialchars($f['title']); ?></h3>
                         <p><?php echo htmlspecialchars($f['description']); ?></p>
                     </div>
                 </div>
@@ -367,9 +367,9 @@ foreach ([1 => 'fa-seedling', 2 => 'fa-book-reader', 3 => 'fa-lightbulb', 4 => '
 <section class="bg-light">
     <div class="container">
         <div class="section-header reveal">
-            <span class="eyebrow">Our Network</span>
-            <h2>Our Campuses</h2>
-            <p>Beyond our main campus, <?php echo htmlspecialchars(getSiteName()); ?> runs specialised institutes for focused learning</p>
+            <span class="eyebrow"><?php echo htmlspecialchars(content('home_campuses_eyebrow')); ?></span>
+            <h2><?php echo htmlspecialchars(content('home_campuses_heading')); ?></h2>
+            <p><?php echo htmlspecialchars(content('home_campuses_subtitle')); ?></p>
         </div>
         <div class="card-grid campus-grid">
             <?php while ($c = mysqli_fetch_assoc($home_campuses)): ?>
@@ -396,7 +396,7 @@ foreach ([1 => 'fa-seedling', 2 => 'fa-book-reader', 3 => 'fa-lightbulb', 4 => '
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
-                <a href="campuses.php" class="level-link campus-card-link">Visit Campus Page <i class="fas fa-arrow-right"></i></a>
+                <a href="campuses" class="level-link campus-card-link">Visit Campus Page <i class="fas fa-arrow-right"></i></a>
             </div>
             <?php endwhile; ?>
         </div>
@@ -436,7 +436,7 @@ $campus_life = [
         <?php if (!empty($life_cards)): ?>
         <div class="life-photo-grid">
             <?php foreach ($life_cards as $card): ?>
-            <a href="gallery.php" class="life-photo reveal">
+            <a href="gallery" class="life-photo reveal">
                 <?php $cover = mediaThumb($card['cover']); ?><img src="<?php echo htmlspecialchars($cover['src']); ?>"<?php if ($cover['width']): ?> width="<?php echo $cover['width']; ?>" height="<?php echo $cover['height']; ?>"<?php endif; ?> decoding="async" alt="<?php echo htmlspecialchars($card['name']); ?> at <?php echo htmlspecialchars(getSiteName()); ?>" loading="lazy">
                 <span class="life-photo-caption">
                     <strong><?php echo htmlspecialchars($card['name']); ?></strong>
@@ -458,8 +458,8 @@ $campus_life = [
         </div>
         <?php endif; ?>
         <div class="btn-group campus-life-actions">
-            <a href="gallery.php" class="btn btn-primary">View Photo Gallery</a>
-            <a href="events.php" class="btn btn-outline-dark">News &amp; Events</a>
+            <a href="gallery" class="btn btn-primary">View Photo Gallery</a>
+            <a href="events" class="btn btn-outline-dark">News &amp; Events</a>
         </div>
     </div>
 </section>
@@ -497,7 +497,7 @@ $campus_life = [
             <button type="button" class="testimonial-nav next" aria-label="Next review"><i class="fas fa-chevron-right"></i></button>
         </div>
         <div class="text-center mt-30">
-            <a href="alumni.php#review" class="btn btn-outline-dark">Share Your Experience</a>
+            <a href="alumni#review" class="btn btn-outline-dark">Share Your Experience</a>
         </div>
     </div>
 </section>
@@ -533,7 +533,7 @@ $has_updates = $event_count > 0 || ($home_news && mysqli_num_rows($home_news) > 
         </div>
         <?php endif; ?>
         <div class="text-center mt-30">
-            <a href="events.php" class="btn btn-primary">View All News &amp; Events</a>
+            <a href="events" class="btn btn-primary">View All News &amp; Events</a>
         </div>
     </div>
 </section>
@@ -577,7 +577,8 @@ $has_updates = $event_count > 0 || ($home_news && mysqli_num_rows($home_news) > 
                 <span class="eyebrow"><?php echo htmlspecialchars(content('home_contact_eyebrow')); ?></span>
                 <h3><?php echo htmlspecialchars(content('home_contact_heading')); ?></h3>
                 <p class="faq-form-text"><?php echo htmlspecialchars(content('home_contact_text')); ?></p>
-                <form method="POST" action="contact.php">
+                <form method="POST" action="contact">
+                    <?php echo formGuardFields(); ?>
                     <div class="form-group">
                         <label for="home_name">Your Name *</label>
                         <input type="text" id="home_name" name="name" required placeholder="Enter your name">
@@ -623,12 +624,12 @@ $adm_phone = trim(explode(',', getSitePhone())[0]);
                 <p><?php echo htmlspecialchars(content('home_adm_text')); ?></p>
 
                 <div class="btn-group">
-                    <a href="admission.php" class="btn btn-secondary"><?php echo htmlspecialchars(content('home_adm_btn1_label')); ?></a>
-                    <a href="contact.php" class="btn btn-outline"><?php echo htmlspecialchars(content('home_adm_btn2_label')); ?></a>
+                    <a href="admission" class="btn btn-secondary"><?php echo htmlspecialchars(content('home_adm_btn1_label')); ?></a>
+                    <a href="contact" class="btn btn-outline"><?php echo htmlspecialchars(content('home_adm_btn2_label')); ?></a>
                 </div>
 
                 <ul class="admissions-contact">
-                    <li><i class="fas fa-map-marker-alt"></i> <span>Canal View, Hasilpur</span></li>
+                    <li><i class="fas fa-map-marker-alt"></i> <span><?php echo htmlspecialchars(trim((string) strtok(getSiteAddress(), "\n"))); ?></span></li>
                     <?php if ($adm_phone !== ''): ?>
                     <li><i class="fas fa-phone"></i> <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $adm_phone)); ?>"><?php echo htmlspecialchars($adm_phone); ?></a></li>
                     <?php endif; ?>
@@ -671,8 +672,8 @@ $adm_phone = trim(explode(',', getSitePhone())[0]);
             <h2><?php echo htmlspecialchars(content('home_cta_heading')); ?></h2>
             <p><?php echo htmlspecialchars(content('home_cta_text')); ?></p>
             <div class="btn-group">
-                <a href="contact.php" class="btn btn-outline"><?php echo htmlspecialchars(content('home_cta_btn1_label')); ?></a>
-                <a href="admission.php" class="btn btn-secondary"><?php echo htmlspecialchars(content('home_cta_btn2_label')); ?></a>
+                <a href="contact" class="btn btn-outline"><?php echo htmlspecialchars(content('home_cta_btn1_label')); ?></a>
+                <a href="admission" class="btn btn-secondary"><?php echo htmlspecialchars(content('home_cta_btn2_label')); ?></a>
             </div>
         </div>
     </div>
