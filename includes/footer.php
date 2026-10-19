@@ -56,7 +56,8 @@
 
                 <div class="footer-section footer-contact">
                     <h2 class="footer-heading">Contact Info</h2>
-                    <p><i class="fas fa-map-marker-alt"></i> <span><?php echo nl2br(htmlspecialchars(getSiteAddress())); ?></span></p>
+                    <?php // The address is saved on several lines in Settings; the footer shows it on one: "Canal View, Hasilpur, Pakistan" ?>
+                    <p><i class="fas fa-map-marker-alt"></i> <span><?php echo htmlspecialchars(implode(', ', array_filter(array_map(fn($line) => trim($line, " \t,"), preg_split('/\r\n|\r|\n/', getSiteAddress()))))); ?></span></p>
                     <?php foreach (array_filter(array_map('trim', explode(',', getSitePhone()))) as $number): ?>
                         <p><i class="fas fa-phone"></i> <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+]/', '', $number)); ?>"><?php echo htmlspecialchars($number); ?></a></p>
                     <?php endforeach; ?>
