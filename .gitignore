@@ -13,3 +13,6 @@ error_log
 
 # Gallery thumbnails are generated automatically on the server
 uploads/**/thumbs/
+
+# Live server database settings (created on the server from config.local.example.php)
+includes/config.local.php

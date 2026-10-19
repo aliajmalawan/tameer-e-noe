@@ -22,10 +22,17 @@ if (session_status() === PHP_SESSION_NONE) {
 // Database Configuration
 // On Windows (XAMPP) "localhost" first tries IPv6 and can add ~2 seconds to every page;
 // 127.0.0.1 connects straight away. Linux hosting (cPanel) keeps "localhost", its fast local socket.
-define('DB_HOST', PHP_OS_FAMILY === 'Windows' ? '127.0.0.1' : 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'tameer_e_noe');
+// The live server keeps its own database name, user and password in includes/config.local.php.
+// That file is never committed to Git, so deploying new code never overwrites it and the
+// password never appears on GitHub. Copy includes/config.local.example.php to create it.
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
+// Defaults for this computer (XAMPP), used when config.local.php doesn't set a value
+defined('DB_HOST') || define('DB_HOST', PHP_OS_FAMILY === 'Windows' ? '127.0.0.1' : 'localhost');
+defined('DB_USER') || define('DB_USER', 'root');
+defined('DB_PASS') || define('DB_PASS', '');
+defined('DB_NAME') || define('DB_NAME', 'tameer_e_noe');
 
 // Create connection. If the database server is not running, show a short friendly page
 // instead of PHP's raw error (which would reveal file paths and the database user).
