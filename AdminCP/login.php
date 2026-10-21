@@ -70,10 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif ($recent_failures() >= LOGIN_MAX_FAILURES) {
         $error_message = 'Too many wrong attempts. Please wait ' . LOGIN_WINDOW_MINUTES . ' minutes and try again.';
     } else {
-        $stmt = mysqli_prepare($conn, "SELECT * FROM admin_users WHERE username = ? AND status = 'active' LIMIT 1");
-        mysqli_stmt_bind_param($stmt, 's', $username);
-        mysqli_stmt_execute($stmt);
-        $admin = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        // Escaped plain query (not mysqli_stmt_get_result, which needs the mysqlnd driver
+        // that many shared hosts don't have - it caused HTTP 500 on the live server)
+        $username_sql = mysqli_real_escape_string($conn, mb_substr($username, 0, 50));
+        $result = mysqli_query($conn, "SELECT * FROM admin_users WHERE username = '$username_sql' AND status = 'active' LIMIT 1");
+        $admin = $result ? mysqli_fetch_assoc($result) : null;
 
         if ($admin && password_verify($password, $admin['password'])) {
             // New session id at login, so an id planted before login is worthless (session fixation)

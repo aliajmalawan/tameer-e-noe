@@ -48,11 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $edit_video = null;
 if (isset($_GET['edit'])) {
-    $stmt = mysqli_prepare($conn, "SELECT * FROM gallery_videos WHERE id = ?");
-    $edit_id = intval($_GET['edit']);
-    mysqli_stmt_bind_param($stmt, 'i', $edit_id);
-    mysqli_stmt_execute($stmt);
-    $edit_video = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+    // intval keeps this safe; plain query because mysqli_stmt_get_result needs mysqlnd
+    $edit_result = mysqli_query($conn, "SELECT * FROM gallery_videos WHERE id = " . intval($_GET['edit']));
+    $edit_video = $edit_result ? mysqli_fetch_assoc($edit_result) : null;
 }
 
 try {
